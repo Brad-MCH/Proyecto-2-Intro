@@ -25,13 +25,15 @@ def scale_image_by_height(image, height):
     new_width = int(height * aspect_ratio)
     return pygame.transform.scale(image, (new_width, height))
     
-
-player_image = pygame.image.load("assets/images/steve/idle/0.png").convert_alpha()
-player_image = scale_image_by_height(player_image, PLAYER_HEIGHT)
+animation_list = []
+for i in range(4):
+    img = pygame.image.load(f"assets/images/steve/idle/{i}.png").convert_alpha()
+    img = scale_image_by_height(img, PLAYER_HEIGHT)
+    animation_list.append(img)
 
 
 # Create player
-player = Player(100, 100, player_image)
+player = Player(100, 100, animation_list)
 
 # Main game loop
 run = True
@@ -57,6 +59,9 @@ while run:
 
     # Move player
     player.move(dx, dy)
+
+    # Update player
+    player.update()
 
     # Draw player
     player.draw(screen)
