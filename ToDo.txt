@@ -1,0 +1,46 @@
+Primer nivel (Pradera):
+    Base: Pasto
+    Bloques indestructibles: Madera
+    Bloques destructibles: Tierra
+    Enemigo: Pillagers
+
+Segundo nivel (Minas):
+    Base: [Piedra, madera_procesada]
+    Bloques indestructibles: [Minerales_varios]
+    Bloques destructibles: Grava
+    Enemigo: Zombies y opcional creeper
+
+Tercer nivel (Nether)
+    Base: Netherack
+    Bloques indestructibles: Ladrillos_de_stronghold
+    Bloques destructibles: [Arena_de_almas]
+    Enemigo: Blaze y wither_skeleton
+
+Cuarto nivel (End)
+    Base: Piedra_del_end
+    Bloques indestructibles: Obsidiana o bedrock o portal_end
+    Bloques destructibles: Ladrillos_de_ciudad_end o bloques_arbol_end
+    Boss: Dragona
+    Enemigo: Enderman
+
+Sprites adicionales:
+    Llaves (Tematicas con respecto al nivel)
+    Personajes (Que vayan mejorando de armadura)
+    Corazones de minecraft
+    Bombas (tnt)
+    
+
+
+
+
+1 1 1 1 1 1 1 1 1
+1 0 0 0 1 0 0 0 1
+1 0 0 0 1 0 0 0 1
+1 0 0 0 2 0 0 0 1
+1 0 0 0 2 0 0 0 1
+1 0 0 0 2 0 0 0 1
+1 0 0 0 1 0 0 0 1
+1 0 0 0 1 0 0 0 1
+1 0 0 0 1 0 0 0 1
+1 1 1 1 1 1 1 1 1
+
