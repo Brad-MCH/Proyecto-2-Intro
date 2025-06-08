@@ -1,6 +1,8 @@
 import pygame
 from constants import *
 from player import Player
+from world import World
+import csv
 from os import system
 
 system("cls")
@@ -12,6 +14,10 @@ pygame.display.set_caption("BomberCraft")
 
 # Create clock for controlling frame rate
 clock = pygame.time.Clock()
+
+# Game variables
+level = 1  # Set the level to load
+screen_scroll = [0, 0]  # Initialize screen scroll position
 
 # Define player movement variables
 moving_left = False
@@ -26,14 +32,42 @@ def scale_image_by_height(image, height):
     return pygame.transform.scale(image, (new_width, height))
     
 animation_list = []
-for i in range(4):
-    img = pygame.image.load(f"assets/images/steve/idle/{i}.png").convert_alpha()
-    img = scale_image_by_height(img, PLAYER_HEIGHT)
-    animation_list.append(img)
+animation_types = ["idle", "running_up", "running_down", "running_left", "running_right"]
 
+for animation_type in animation_types:
+    temp_animation_list = []
+
+    for i in range(4):
+        img = pygame.image.load(f"assets/images/steve/{animation_type}/{i}.png").convert_alpha()
+        img = scale_image_by_height(img, PLAYER_HEIGHT)
+        temp_animation_list.append(img)
+
+    animation_list.append(temp_animation_list)
 
 # Create player
-player = Player(100, 100, animation_list)
+player = Player(400, 300, animation_list)
+
+
+#load map tiles
+tile_list = []
+for i in range(TILE_TYPES):
+    img = pygame.image.load(f"assets/images/tiles/{i}.png").convert_alpha()
+    img = scale_image_by_height(img, TILE_SIZE)
+    tile_list.append(img)
+
+# Create empty world data
+world_data = [[-1 for _ in range(WORLD_COLS)] for _ in range(WORLD_ROWS)]
+
+# Load world data from CSV file
+with open(f"levels/level{level}.csv", newline='') as csvfile:
+    reader = csv.reader(csvfile, delimiter=',')
+    for y, row in enumerate(reader):
+        for x, tile in enumerate(row):
+            world_data[y][x] = int(tile)
+
+world = World()
+world.load_map(world_data, tile_list)
+
 
 # Main game loop
 run = True
@@ -47,8 +81,9 @@ while run:
     # Calculate player movement
     dx = 0
     dy = 0
+    
 
-    if moving_right:
+    if moving_right: 
         dx = PLAYER_SPEED
     if moving_left:
         dx = -PLAYER_SPEED
@@ -56,12 +91,17 @@ while run:
         dy = -PLAYER_SPEED
     if moving_down:
         dy = PLAYER_SPEED
+     
+    # Draw the world
+    world.draw(screen)
 
     # Move player
-    player.move(dx, dy)
+    screen_scroll = player.move(dx, dy)
+    
 
-    # Update player
+    # Update objets in the world
     player.update()
+    world.update(screen_scroll)
 
     # Draw player
     player.draw(screen)
