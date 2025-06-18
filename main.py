@@ -32,16 +32,24 @@ def scale_image_by_height(image, height):
     return pygame.transform.scale(image, (new_width, height))
     
 animation_list = []
-animation_types = ["idle", "running_up", "running_down", "running_left", "running_right", "running_up_left", "running_up_right", "running_down_left", "running_down_right"]
+animation_types = [
+    "idle",
+    "running_up",
+    "running_down",
+    "running_left",
+    "running_right",
+    "running_up_left",
+    "running_up_right",
+    "running_down_left",
+    "running_down_right"]
 
 for animation_type in animation_types:
     temp_animation_list = []
-
-    for i in range(8):
+    num_frames = 8 if animation_type == "idle" else 4
+    for i in range(num_frames):
         img = pygame.image.load(f"assets/images/Mage-Red/{animation_type}/{i}.png").convert_alpha()
         img = scale_image_by_height(img, PLAYER_HEIGHT)
         temp_animation_list.append(img)
-
     animation_list.append(temp_animation_list)
 
 # Create player
