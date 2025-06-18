@@ -32,13 +32,13 @@ def scale_image_by_height(image, height):
     return pygame.transform.scale(image, (new_width, height))
     
 animation_list = []
-animation_types = ["idle", "running_up", "running_down", "running_left", "running_right"]
+animation_types = ["idle", "running_up", "running_down", "running_left", "running_right", "running_up_left", "running_up_right", "running_down_left", "running_down_right"]
 
 for animation_type in animation_types:
     temp_animation_list = []
 
-    for i in range(4):
-        img = pygame.image.load(f"assets/images/steve/{animation_type}/{i}.png").convert_alpha()
+    for i in range(8):
+        img = pygame.image.load(f"assets/images/Mage-Red/{animation_type}/{i}.png").convert_alpha()
         img = scale_image_by_height(img, PLAYER_HEIGHT)
         temp_animation_list.append(img)
 

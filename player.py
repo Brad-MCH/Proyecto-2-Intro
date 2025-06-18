@@ -6,7 +6,7 @@ class Player:
     def __init__(self, x, y, animation_list):
         self.last_mov = 0
         self.frame_index = 0
-        self.action = 0 # 0:iddle, 1:running_up, 2:running_down, 3:running_left, 4:running_right
+        self.action = 0 # 0:iddle, 1:running_up, 2:running_down, 3:running_left, 4:running_right, 5:running_up_left, 6:running_up_right, 7:running_down_left, 8:running_down_right
         self.animation_list = animation_list
         self.update_time = pygame.time.get_ticks()
         self.image = animation_list[self.action][self.frame_index]
@@ -17,7 +17,19 @@ class Player:
 
         screen_scroll = [0, 0]  # Initialize screen scroll position
 
-        if dx == 0 and dy == 0:
+        if dx < 0 and dy < 0:
+            self.last_mov = 5
+            self.update_action(5)  # running_up_left
+        elif dx > 0 and dy < 0:
+            self.last_mov = 6
+            self.update_action(6)  # running_up_right
+        elif dx < 0 and dy > 0:
+            self.last_mov = 7
+            self.update_action(7)  # running_down_left
+        elif dx > 0 and dy > 0:
+            self.last_mov = 8
+            self.update_action(8)  # running_down_right
+        elif dx == 0 and dy == 0:
             self.update_idle()
         elif dx < 0:
             self.last_mov = 2
@@ -31,6 +43,7 @@ class Player:
         elif dy > 0:
             self.last_mov = 0
             self.update_action(2)
+        
         
 
         # Handle diagonal movement
@@ -72,6 +85,14 @@ class Player:
             self.update_action(3)
         elif self.action == 4:
             self.update_action(4)
+        elif self.last_mov == 5:
+            self.update_action(5)  # running_up_left
+        elif self.last_mov == 6:
+            self.update_action(6)  # running_up_right
+        elif self.last_mov == 7:
+            self.update_action(7)  # running_down_left
+        elif self.last_mov == 8:
+            self.update_action(8)  # running_down_right
 
         animation_cooldown = 70
         # Handle animation
