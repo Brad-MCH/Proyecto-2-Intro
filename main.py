@@ -1,36 +1,46 @@
 import pygame
 from constants import *
 from player import Player
-from world import World
+from world import *
 import csv
 from os import system
+from weapons import *
 
 system("cls")
 
 pygame.init()
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("BomberCraft")
+pygame.display.set_caption("BomberMage")
 
-# Create clock for controlling frame rate
+# Crear reloj para controlar la tasa de fotogramas
 clock = pygame.time.Clock()
 
-# Game variables
-level = 1  # Set the level to load
-screen_scroll = [0, 0]  # Initialize screen scroll position
+# Variables del juego
+level = 1  # Establecer el nivel a cargar
+screen_scroll = [0, 0]  # Inicializar la posición de desplazamiento de la pantalla
 
-# Define player movement variables
+# Definir variables de movimiento del jugador
 moving_left = False
 moving_right = False
 moving_up = False
 moving_down = False
 
-# Aux funtion to scale images
+
+# Función auxiliar para escalar imágenes
 def scale_image_by_height(image, height):
     aspect_ratio = image.get_width() / image.get_height()
     new_width = int(height * aspect_ratio)
     return pygame.transform.scale(image, (new_width, height))
-    
+
+def load_animation_images(info_list):
+    animation_list = []
+    folder_name, number_frames = info_list
+    for i in range(number_frames):
+        img = pygame.image.load(f"assets/images/{folder_name}/{i}.png").convert_alpha()
+        img = scale_image_by_height(img, PLAYER_HEIGHT)
+        animation_list.append(img)
+
 animation_list = []
 animation_types = [
     "idle",
@@ -52,21 +62,17 @@ for animation_type in animation_types:
         temp_animation_list.append(img)
     animation_list.append(temp_animation_list)
 
-# Create player
-player = Player(400, 300, animation_list)
-
-
-#load map tiles
+# Cargar tiles del mapa
 tile_list = []
 for i in range(TILE_TYPES):
     img = pygame.image.load(f"assets/images/tiles/{i}.png").convert_alpha()
     img = scale_image_by_height(img, TILE_SIZE)
     tile_list.append(img)
 
-# Create empty world data
+# Crear datos de mundo vacíos
 world_data = [[-1 for _ in range(WORLD_COLS)] for _ in range(WORLD_ROWS)]
 
-# Load world data from CSV file
+# Cargar datos del mundo desde un archivo CSV
 with open(f"levels/level{level}.csv", newline='') as csvfile:
     reader = csv.reader(csvfile, delimiter=',')
     for y, row in enumerate(reader):
@@ -74,19 +80,30 @@ with open(f"levels/level{level}.csv", newline='') as csvfile:
             world_data[y][x] = int(tile)
 
 world = World()
-world.load_map(world_data, tile_list)
+world.load_map(world_data, tile_list, animation_list)
 
+player = world.player
 
-# Main game loop
+# Cargar imágenes de armas
+RedFireball = scale_image_by_height(pygame.image.load("assets/images/weapons/fireball.png").convert_alpha(), TROWABLE_SIZE)
+firebomb = scale_image_by_height(pygame.image.load("assets/images/weapons/firebomb.png").convert_alpha(), 50)
+firebomb = pygame.transform.rotate(firebomb, 90)
+red_mage_weapons = [RedFireball, firebomb]
+
+mage = RedMage(red_mage_weapons, world.obstacles)
+
+trown_group = pygame.sprite.Group()
+
+# Bucle principal del juego
 run = True
 while run:
 
-    # Control frame rate
+    # Controlar la tasa de fotogramas
     clock.tick(FPS)
 
     screen.fill(BG)
 
-    # Calculate player movement
+    # Calcular movimiento del jugador
     dx = 0
     dy = 0
     
@@ -100,26 +117,33 @@ while run:
     if moving_down:
         dy = PLAYER_SPEED
      
-    # Draw the world
+    # Dibujar el mundo
     world.draw(screen)
 
-    # Move player
-    screen_scroll = player.move(dx, dy)
+    # Mover jugador
+    screen_scroll = player.move(dx, dy, world.obstacles)
     
-
-    # Update objets in the world
+    # Actualizar objetos en el mundo
     player.update()
     world.update(screen_scroll)
 
-    # Draw player
+    object_fired = mage.update(player)
+    if object_fired:
+        trown_group.add(object_fired)
+        print(object_fired.angle)
+    for object in trown_group:
+        object.update(screen_scroll)
+        object.draw(screen)
+
+    # Dibujar jugador
     player.draw(screen)
 
-    # Event handling
+    # Manejo de eventos
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
 
-        # Handle key presses
+        # Manejar teclas presionadas
         if event.type == pygame.KEYDOWN:
             if event.key in [pygame.K_a, pygame.K_LEFT]:
                 moving_left = True
@@ -130,7 +154,7 @@ while run:
             if event.key in [pygame.K_s, pygame.K_DOWN]:
                 moving_down = True
 
-        # Handle key releases
+        # Manejar teclas soltadas
         if event.type == pygame.KEYUP:
             if event.key in [pygame.K_a, pygame.K_LEFT]:
                 moving_left = False
@@ -142,7 +166,7 @@ while run:
                 moving_down = False
     
 
-    # Update display
+    # Actualizar pantalla
     pygame.display.update()
 
 pygame.quit()
