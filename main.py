@@ -11,10 +11,72 @@ system("cls")
 pygame.init()
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("BomberMage")
+pygame.display.set_caption("Dungeonfall")
 
 # Crear reloj para controlar la tasa de fotogramas
 clock = pygame.time.Clock()
+
+def draw_button(text, x, y, width, height, color, hover_color, action=None):
+    mouse = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed()
+    button_rect = pygame.Rect(x, y, width, height)
+    if button_rect.collidepoint(mouse):
+        pygame.draw.rect(screen, hover_color, button_rect)
+        if click[0] == 1 and action is not None:
+            action()
+    else:
+        pygame.draw.rect(screen, color, button_rect)
+    font_btn = pygame.font.Font(FONT_PATH, 40)
+    text_surf = font_btn.render(text, True, (255, 255, 255))
+    text_rect = text_surf.get_rect(center=button_rect.center)
+    screen.blit(text_surf, text_rect)
+
+def ventana_jugar():
+    global ESTADO
+    ESTADO = "seleccion_PJ"
+    
+    
+
+def ventana_salir():
+    pygame.quit()
+    exit()
+    pygame.display.update()
+    clock.tick(60)
+
+def main_menu():
+    global menu
+    menu = True
+    font = pygame.font.Font(FONT_PATH, 60)
+    bg_img = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+    bg_img.fill((40, 25, 25))
+    while menu:
+        screen.blit(bg_img, (0, 0))
+        title = font.render("Dungeonfall", True, (255, 255, 255))
+        screen.blit(title, (SCREEN_WIDTH//2 - title.get_width()//2, 100))
+        # Botón Jugar
+        draw_button("Jugar", 300, 250, 200, 60, (70, 130, 180), (100, 180, 250), ventana_jugar)
+        # Botón Créditos
+        draw_button("Salir", 300, 350, 200, 60, (70, 130, 180), (100, 180, 250), ventana_salir)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+        pygame.display.update()
+        clock.tick(60)
+        while menu:
+            if ESTADO == "menu":
+                main_menu()
+            if ESTADO == "seleccion_PJ":
+                screen.fill(BLACK)
+                font = pygame.font.Font(FONT_PATH, 50)
+            texto = font.render("Selecciona tu personaje", True, (255, 255, 255))
+            screen.blit(texto, (SCREEN_WIDTH//2 - texto.get_width()//2, 200))
+            pygame.display.update()
+            # Aquí puedes agregar botones para elegir personaje, etc.
+            if ESTADO == "juego":
+                pass
+
+main_menu()
 
 # Variables del juego
 level = 1  # Establecer el nivel a cargar

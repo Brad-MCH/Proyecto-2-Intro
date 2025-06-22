@@ -192,4 +192,3 @@ class Player:
         screen.blit(self.image, self.rect)
         #pygame.draw.rect(screen, RED, self.rect, 1)
         #pygame.draw.rect(screen, RED, self.collide_rect, 1)
-
