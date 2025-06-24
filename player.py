@@ -2,6 +2,7 @@ import pygame
 import math
 from constants import *
 
+
 class Player:
     def __init__(self, x, y, animation_list):
         self.last_mov = 0
