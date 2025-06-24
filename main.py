@@ -171,6 +171,10 @@ red_mage_weapons = [RedFireball, firebomb]
 archer_weapons = [arrow, firebomb]
 warrior_weapons = [dagger, firebomb]
 
+img_mago = mage_animations[0][0]
+img_arquero = archer_animations[0][0]
+img_guerrero = warrior_animations[0][0]
+
 trown_group = pygame.sprite.Group()
 
 # Bucle principal del juego
@@ -270,12 +274,17 @@ while run:
         texto = font.render("Selecciona tu personaje", True, (255, 255, 255))
         screen.blit(texto, (SCREEN_WIDTH//2 - texto.get_width()//2, 50))
         
+        screen.blit(img_mago, (100 + 75 - img_mago.get_width() // 2, 350 - img_mago.get_height() - 40))
 
-        draw_button("Mago", 300, 250, 150, 45, (70, 130, 180), (100, 180, 250), seleccionar_mago)
+        screen.blit(img_arquero, (300 + 75 - img_arquero.get_width() // 2, 350 - img_arquero.get_height() - 40))
+        
+        screen.blit(img_guerrero, (500 + 75 - img_guerrero.get_width() // 2, 350 - img_guerrero.get_height() - 40))
+
+        draw_button("Mago", 100, 350, 150, 45, (70, 130, 180), (100, 180, 250), seleccionar_mago)
 
         draw_button("Arquero", 300, 350, 150, 45, (70, 130, 180), (100, 180, 250), seleccionar_arquero)
 
-        draw_button("Guerrero", 300, 450, 150, 45, (70, 130, 180), (100, 180, 250), seleccionar_guerrero)
+        draw_button("Guerrero", 500, 350, 150, 45, (70, 130, 180), (100, 180, 250), seleccionar_guerrero)
     
 
     # Actualizar pantalla

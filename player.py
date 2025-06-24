@@ -193,3 +193,37 @@ class Player:
         screen.blit(self.image, self.rect)
         #pygame.draw.rect(screen, RED, self.rect, 1)
         #pygame.draw.rect(screen, RED, self.collide_rect, 1)
+'''
+aqui queria hacer las stats de cada clase, tengo que definir los numeros de cada stat pero ahorita todos estan en 10 y falta implementarlo en los pj'''
+class Mage(Player):
+    def __init__(self, x, y, animation_list):
+        super().__init__(x, y, animation_list)
+        self.mana = MANA_PJ
+        self.health = HEALTH_PJ
+        self.strong = STRONG_PJ
+
+    def update(self):
+        super().update()
+        # Aquí puedes agregar lógica específica del mago si es necesario
+
+class Archer(Player):
+    def __init__(self, x, y, animation_list):
+        super().__init__(x, y, animation_list)
+        self.mana = MANA_PJ
+        self.health = HEALTH_PJ
+        self.strong = STRONG_PJ
+
+    def update(self):
+        super().update()
+        # Aquí puedes agregar lógica específica del arquero si es necesario
+
+class Warrior(Player):
+    def __init__(self, x, y, animation_list):
+        super().__init__(x, y, animation_list)
+        self.mana = MANA_PJ
+        self.health = HEALTH_PJ
+        self.strong = STRONG_PJ
+
+    def update(self):
+        super().update()
+        # Aquí puedes agregar lógica específica del guerrero si es necesario

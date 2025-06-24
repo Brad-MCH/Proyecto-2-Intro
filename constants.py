@@ -27,3 +27,4 @@ MANA_PJ = 10
 FONT_PATH = "assets/fonts/DUNGRG__.TTF"
 BLACK = (0, 0, 0)
 ESTADO = "menu"
+
