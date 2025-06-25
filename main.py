@@ -135,6 +135,22 @@ def seleccionar_guerrero():
     personaje_activo = Warrior(warrior_weapons, world.obstacles)
     ESTADO = "juego"
 
+def display_info():
+
+    for i in range(5):
+        if (i + 1) * 20 <= player.health:
+            screen.blit(full_hearth, (10 + i * (ITEM_SIZE + 5), 10))
+        elif (i + 1) * 20 <= player.health + 10:
+            screen.blit(half_hearth, (10 + i * (ITEM_SIZE + 5), 10))
+        else:
+            screen.blit(empty_hearth, (10 + i * (ITEM_SIZE + 5), 10))
+
+    for i in range(11):
+        if (i * 10) <= player.mana < ((i * 10) + 10):
+            screen.blit(mana[10-i], (10*30, -15))
+            continue
+       
+
 # Cargar tiles del mapa
 tile_list = []
 for i in range(TILE_TYPES):
@@ -155,19 +171,25 @@ with open(f"levels/level{level}.csv", newline='') as csvfile:
 world = World()
 
 
+# Cargar imagenes de items
+full_hearth = scale_image_by_height(pygame.image.load("assets/images/items/hearth0.png").convert_alpha(), ITEM_SIZE)
+empty_hearth = scale_image_by_height(pygame.image.load("assets/images/items/hearth1.png").convert_alpha(), ITEM_SIZE)
+half_hearth = scale_image_by_height(pygame.image.load("assets/images/items/hearth2.png").convert_alpha(), ITEM_SIZE)
 
+mana = []
+for i in range(11):
+    img = pygame.image.load(f"assets/images/items/mana/{i}.png").convert_alpha()
+    img = scale_image_by_height(img, 100)
+    mana.append(img)
 
 # Cargar imágenes de armas
-RedFireball = scale_image_by_height(pygame.image.load("assets/images/weapons/fireball.png").convert_alpha(), TROWABLE_SIZE)
-
+red_fireball = scale_image_by_height(pygame.image.load("assets/images/weapons/fireball.png").convert_alpha(), TROWABLE_SIZE)
 firebomb = scale_image_by_height(pygame.image.load("assets/images/weapons/firebomb.png").convert_alpha(), 50)
 firebomb = pygame.transform.rotate(firebomb, 90)
-
 dagger = scale_image_by_height(pygame.image.load("assets/images/weapons/dagger.png").convert_alpha(), 50)
-
 arrow = scale_image_by_height(pygame.image.load("assets/images/weapons/arrow.png").convert_alpha(), 50)
 
-red_mage_weapons = [RedFireball, firebomb]
+red_mage_weapons = [red_fireball, firebomb]
 archer_weapons = [arrow, firebomb]
 warrior_weapons = [dagger, firebomb]
 
@@ -176,6 +198,7 @@ img_arquero = archer_animations[0][0]
 img_guerrero = warrior_animations[0][0]
 
 trown_group = pygame.sprite.Group()
+
 
 # Bucle principal del juego
 run = True
@@ -243,15 +266,16 @@ while run:
         object_fired = personaje_activo.update(player)
         if object_fired:
             trown_group.add(object_fired)
-            print(object_fired.angle)
         for object in trown_group:
             object.update(screen_scroll)
             object.draw(screen)
     
         # Dibujar jugador
         player.draw(screen)
-                # Aquí maneja los eventos del juego
-        pass
+      
+        # Actualizar menú suprerior
+        display_info()
+
         # Dibuja la pantalla según el estado
     elif ESTADO == "menu":
         font = pygame.font.Font(FONT_PATH, 60)

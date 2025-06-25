@@ -2,6 +2,12 @@ from pygame import *
 import math
 from constants import *
 
+def mouse_tile_index():
+    pos = mouse.get_pos()
+    x = pos[0] // TILE_SIZE
+    y = pos[1] // TILE_SIZE
+    return x + (y * WORLD_COLS)
+
 # Esta clase maneja los ataques del mago rojo.
 class RedMage:
     def __init__(self, weapons, obstacles):
@@ -20,7 +26,8 @@ class RedMage:
         y_dist = -(pos[1] - player.rect.centery)
         self.angle = math.degrees(math.atan2(y_dist, x_dist))
 
-        if mouse.get_pressed()[2] and not self.fired and (time.get_ticks() - self.last_shot) >= TROWN_COOLDOWN:
+        if mouse.get_pressed()[2] and not self.fired and (time.get_ticks() - self.last_shot) >= TROWN_COOLDOWN and player.mana >= ESP_ATACK_MANA:
+            player.mana -= ESP_ATACK_MANA
             object_fired = RedFireball(self.fireball_image, player.rect.centerx, player.rect.centery, self.angle, self.obstacles)
             self.fired = True
             self.last_shot = time.get_ticks()
@@ -28,7 +35,8 @@ class RedMage:
         if not mouse.get_pressed()[2]:
             self.fired = False
 
-        if mouse.get_pressed()[0] and not self.fired and (time.get_ticks() - self.last_shot) >= TROWN_COOLDOWN:
+        if mouse.get_pressed()[0] and not self.fired and (time.get_ticks() - self.last_shot) >= TROWN_COOLDOWN and player.mana >= BOMB_MANA:
+            player.mana -= BOMB_MANA
             object_fired = FireBomb(self.firebomb_image, player.rect.centerx, player.rect.centery, self.angle, self.obstacles)
             self.fired = True
             self.last_shot = time.get_ticks()
@@ -173,13 +181,14 @@ class FireBomb(sprite.Sprite):
     def update(self, screen_scroll):
         
             
-        range = 1000
+        range = 100
         self.rect.x += self.dx + screen_scroll[0]
         self.rect.y += self.dy + screen_scroll[1]
         self.collide_rect.center = self.rect.center
 
         if not self.bomb_mode:
             if time.get_ticks() - self.spawn_time > range:
+                self.dx = self.dy = 0
                 self.bomb_mode = True
 
             for obstacle in self.obstacles:

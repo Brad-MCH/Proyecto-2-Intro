@@ -5,6 +5,9 @@ from constants import *
 
 class Player:
     def __init__(self, x, y, animation_list):
+        self.health = HEALTH_PJ
+        self.mana = MANA_PJ
+        self.strong = STRONG_PJ
         self.last_mov = 0
         self.frame_index = 0
         self.action = 0 # 0:idle, 1:corriendo_arriba, 2:corriendo_abajo, 3:corriendo_izquierda, 4:corriendo_derecha, 5:corriendo_arriba_izquierda, 6:corriendo_arriba_derecha, 7:corriendo_abajo_izquierda, 8:corriendo_abajo_derecha
