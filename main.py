@@ -5,6 +5,7 @@ from world import *
 import csv
 from os import system
 from weapons import *
+from enemies import *
 
 system("cls")
 
@@ -199,6 +200,16 @@ img_guerrero = warrior_animations[0][0]
 
 trown_group = pygame.sprite.Group()
 
+# Cargar animaciones de los enemigos
+slime_idle_images = []
+for i in range(6):  # Slime
+    img = pygame.image.load(f"assets/images/enemies/slime/idle_mov/{i}.png").convert_alpha()
+    img = scale_image_by_height(img, PLAYER_HEIGHT)  
+    slime_idle_images.append(img)
+
+# Cargar los enemigos
+animation_list_enemy = []
+animation_list_enemy.append(Slime(200, 200, slime_idle_images)) # los 200 que estan ahi es la posicion
 
 # Bucle principal del juego
 run = True
@@ -239,6 +250,7 @@ while run:
         
     if ESTADO == "juego" and player is not None and personaje_activo is not None:
         screen.fill(BG)
+
         # Calcular movimiento del jugador
         dx = 0
         dy = 0
@@ -253,11 +265,11 @@ while run:
         if moving_down:
             dy = PLAYER_SPEED
          
+        # Mover jugador
+        screen_scroll = player.move(dx, dy, world.get_obstacle_rects())
+
         # Dibujar el mundo
         world.draw(screen)
-    
-        # Mover jugador
-        screen_scroll = player.move(dx, dy, world.obstacles)
         
         # Actualizar objetos en el mundo
         player.update()
@@ -276,6 +288,11 @@ while run:
         # Actualizar menú suprerior
         display_info()
 
+        # Dibuja a los enemigos
+        for enemy in animation_list_enemy:
+            enemy.update(world.get_obstacle_rects())
+            enemy.draw(screen, screen_scroll)
+
         # Dibuja la pantalla según el estado
     elif ESTADO == "menu":
         font = pygame.font.Font(FONT_PATH, 60)
@@ -285,13 +302,16 @@ while run:
         screen.blit(bg_img, (0, 0))
         title = font.render("Dungeonfall", True, (255, 255, 255))
         screen.blit(title, (SCREEN_WIDTH//2 - title.get_width()//2, 100))
+
         # Botón Jugar
         draw_button("Jugar", 300, 250, 200, 60, (70, 130, 180), (100, 180, 250), ventana_jugar)
+
         # Botón Créditos
         draw_button("Salir", 300, 350, 200, 60, (70, 130, 180), (100, 180, 250), ventana_salir)
 
         # Dibuja el menú y botones
     elif ESTADO == "seleccion_PJ":
+    
         # Dibuja la selección de personaje
         screen.fill(BLACK)
         font = pygame.font.Font(FONT_PATH, 50)
