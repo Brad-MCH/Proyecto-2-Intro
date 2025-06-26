@@ -71,4 +71,7 @@ class World:
     def draw(self, screen):
         for tile in self.map_tiles:
             screen.blit(tile[0], tile[1])
+    
+    def get_obstacle_rects(self): # Para los enemigos
+        return [tile[1] for tile in self.obstacles]
             

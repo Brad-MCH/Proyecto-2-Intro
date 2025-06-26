@@ -62,20 +62,19 @@ class Player:
         
         self.collide_rect.x += dx
         for obstacle in obstacles:
-            if self.collide_rect.colliderect(obstacle[1]):
+            if self.collide_rect.colliderect(obstacle):
                 if dx > 0:
-                    self.collide_rect.right = obstacle[1].left
+                    self.collide_rect.right = obstacle.left
                 if dx < 0:
-                    self.collide_rect.left = obstacle[1].right
+                    self.collide_rect.left = obstacle.right
 
-            
         self.collide_rect.y += dy
         for obstacle in obstacles:
-            if self.collide_rect.colliderect(obstacle[1]):
+            if self.collide_rect.colliderect(obstacle):
                 if dy > 0:
-                    self.collide_rect.bottom = obstacle[1].top
+                    self.collide_rect.bottom = obstacle.top
                 if dy < 0:
-                    self.collide_rect.top = obstacle[1].bottom
+                    self.collide_rect.top = obstacle.bottom
 
         
         self.rect.center = (self.collide_rect.centerx, self.collide_rect.centery)
