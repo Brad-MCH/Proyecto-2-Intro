@@ -113,12 +113,19 @@ for animation_type in animation_types:
         temp_animation_list.append(img)
     warrior_animations.append(temp_animation_list)
 
+# cargar imagenes de explosion
+explosion_images = []
+for i in range(6):
+    img = pygame.image.load(f"assets/images/explosion/{i}.png").convert_alpha()
+    img = scale_image_by_height(img, TILE_SIZE)
+    explosion_images.append(img)
+
 # Animaciones de las clases
 def seleccionar_mago():
     global ESTADO, player, world, personaje_activo
     world.load_map(world_data, tile_list, mage_animations)
     player = world.player
-    personaje_activo = RedMage(red_mage_weapons, world.obstacles)
+    personaje_activo = RedMage(red_mage_weapons, world.tile_categories, explosion_images)
     ESTADO = "juego"
 
 def seleccionar_arquero():
@@ -151,6 +158,16 @@ def display_info():
             continue
        
 
+def explosion():
+        
+        mouse_rect = Rect(mouse.get_pos()[0], mouse.get_pos()[1], 1, 1)
+        for tile in world.map_tiles:
+            if tile not in world.walls:
+                if tile[1].colliderect(mouse_rect):
+                    object_fired = Explosion(explosion_images, tile[1].center)
+                    world.explotar(tile, tile_list)
+                    return object_fired
+
 # Cargar tiles del mapa
 tile_list = []
 for i in range(TILE_TYPES):
@@ -182,6 +199,8 @@ for i in range(11):
     img = scale_image_by_height(img, 100)
     mana.append(img)
 
+
+
 # Cargar imágenes de armas
 red_fireball = scale_image_by_height(pygame.image.load("assets/images/weapons/fireball.png").convert_alpha(), TROWABLE_SIZE)
 firebomb = scale_image_by_height(pygame.image.load("assets/images/weapons/firebomb.png").convert_alpha(), 50)
@@ -198,10 +217,13 @@ img_arquero = archer_animations[0][0]
 img_guerrero = warrior_animations[0][0]
 
 trown_group = pygame.sprite.Group()
+explosions_group = pygame.sprite.Group()
 
+from weapons import mouse_tile_index
 
-# Bucle principal del juego
+# Bucle principal del juego 
 run = True
+explosion_epi = None
 while run:
 
     # Controlar la tasa de fotogramas
@@ -223,6 +245,8 @@ while run:
                     moving_up = True
                 if event.key in [pygame.K_s, pygame.K_DOWN]:
                     moving_down = True
+                if event.key == pygame.K_SPACE:
+                    explosion_epi = explosion()
     
             # Manejar teclas soltadas
             if event.type == pygame.KEYUP:
@@ -261,15 +285,23 @@ while run:
         
         # Actualizar objetos en el mundo
         player.update()
-        world.update(screen_scroll)
+        world.update(screen_scroll, tile_list)
 
         object_fired = personaje_activo.update(player)
+
         if object_fired:
             trown_group.add(object_fired)
         for object in trown_group:
             object.update(screen_scroll)
             object.draw(screen)
-    
+        
+        
+        if explosion_epi:
+            explosions_group.add(explosion_epi)
+        for object in explosions_group:
+            if not object.update(screen_scroll):
+                object.draw(screen)
+
         # Dibujar jugador
         player.draw(screen)
       

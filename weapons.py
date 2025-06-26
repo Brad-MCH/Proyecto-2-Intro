@@ -2,21 +2,66 @@ from pygame import *
 import math
 from constants import *
 
-def mouse_tile_index():
-    pos = mouse.get_pos()
-    x = pos[0] // TILE_SIZE
-    y = pos[1] // TILE_SIZE
-    return x + (y * WORLD_COLS)
+def mouse_tile_index(map_tiles, explosion_img):
+    mouse_rect = Rect(mouse.get_pos()[0], mouse.get_pos()[1], 1, 1)
+
+    for tile in map_tiles:
+        if tile[1].colliderect(mouse_rect):
+            print(f"Tile {tile[5]} clicked at {tile[2]}, {tile[3]}")
+
+class Explosion(sprite.Sprite):
+    def __init__(self, animation_list, epicenter):
+        sprite.Sprite.__init__(self)
+        self.animation_list = animation_list
+        self.frame_index = 0
+        self.image = self.animation_list[self.frame_index]
+        self.rect = self.image.get_rect()
+        self.epicinter = epicenter
+        self.rect.center = epicenter
+        self.last_frame = time.get_ticks()
+        self.duration = 600
+        self.blown = False
+    
+    def update(self, screen_scroll):
+
+        self.rect.centerx += screen_scroll[0]
+        self.rect.centery += screen_scroll[1]
+
+        if time.get_ticks() - self.last_frame > (self.duration / 6):
+            
+            if self.frame_index >= 5:
+                self.kill()
+                self.blown = True
+                return True
+            else:
+                self.last_frame = time.get_ticks()
+                self.image = self.animation_list[self.frame_index+1]   
+                self.frame_index += 1
+        
+ 
+        
+
+        return False
+                
+    
+    def draw(self, surface):
+        if not self.blown:
+            surface.blit(self.image, self.rect)
+        
 
 # Esta clase maneja los ataques del mago rojo.
 class RedMage:
-    def __init__(self, weapons, obstacles):
+    def __init__(self, weapons, tile_categories, explosion_imgs):
+        self.explosion_imgs = explosion_imgs
         self.fireball_image = weapons[0]
         self.firebomb_image = weapons[1]
         self.angle = 0
         self.fired = False
         self.last_shot = time.get_ticks()
-        self.obstacles = obstacles
+        self.obstacles = tile_categories["obstacles"]
+        self.map_tiles = tile_categories["map_tiles"]
+        self.destroyable_blocks = tile_categories["destroyable_blocks"]
+        self.walls = tile_categories["walls"]
 
     def update(self, player):
         object_fired = None
@@ -45,6 +90,11 @@ class RedMage:
             self.fired = False
         
         return object_fired
+    
+    
+
+        
+
 
 class Archer:
     def __init__(self, weapons, obstacles):
