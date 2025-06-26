@@ -58,8 +58,8 @@ class Move_enemy:
             self.last_update = now
 
     def draw(self, surface, screen_scroll):
-        screen_x = self.rect.x - screen_scroll[0]
-        screen_y = self.rect.y - screen_scroll[1]
+        screen_x = self.rect.x + screen_scroll[0]
+        screen_y = self.rect.y + screen_scroll[1]
         if (-TILE_SIZE < screen_x < SCREEN_WIDTH and -TILE_SIZE < screen_y < SCREEN_HEIGHT):
             surface.blit(self.animation_list_enemy[self.frame], (screen_x, screen_y))
 

@@ -62,6 +62,7 @@ class RedMage:
         self.map_tiles = tile_categories["map_tiles"]
         self.destroyable_blocks = tile_categories["destroyable_blocks"]
         self.walls = tile_categories["walls"]
+        self.explosion_range = 1
 
     def update(self, player):
         object_fired = None
@@ -232,6 +233,7 @@ class FireBomb(sprite.Sprite):
         
             
         range = 100
+        bomb_delay = 2000
         self.rect.x += self.dx + screen_scroll[0]
         self.rect.y += self.dy + screen_scroll[1]
         self.collide_rect.center = self.rect.center
@@ -247,16 +249,9 @@ class FireBomb(sprite.Sprite):
                     self.wall_hitten = obstacle[1]
                     self.dx = self.dy = 0
         else:
-            """
-            Brandon, Aquí irá la lógica de la explosión de la bomba.
-            Ahora mismo se queda quieta al tocar una pared. pensaba que sería bueno
-            que se comportara como una sticky bomb, que se queda pegada a la pared
-            y explota después de un tiempo.
-
-            Antes de entrar a este else, se guardó la pared tocada en self.wall_hitten.
-            pensaba que se podría partir de esa infomación para hacer obtener la ubicación
-            de la explosión, pero no sé si es lo mejor.
-            """
+            if time.get_ticks() - self.spawn_time > bomb_delay:
+                
+                return self.rect.center
             
 
     def draw(self, surface):

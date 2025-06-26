@@ -158,16 +158,71 @@ def display_info():
             screen.blit(mana[10-i], (10*30, -15))
             continue
        
+def tile_here(center):
+    pos_rect = Rect(center[0], center[1], 1, 1)
+    for tile in world.map_tiles:
+        if tile[1].colliderect(pos_rect):
+            return tile
+    return None
 
-def explosion():
+def explosion(epi):
+    
+        epicenter = tile_here(epi)
         
-        mouse_rect = Rect(mouse.get_pos()[0], mouse.get_pos()[1], 1, 1)
-        for tile in world.map_tiles:
-            if tile not in world.walls:
-                if tile[1].colliderect(mouse_rect):
-                    object_fired = Explosion(explosion_images, tile[1].center)
-                    world.explotar(tile, tile_list)
-                    return object_fired
+        if not epicenter:
+            return None
+        
+        explosiones = [epicenter]
+        arriba_libre = True
+        abajo_libre = True
+        derecha_libre = True
+        izquierda_libre = True
+        for i in range(personaje_activo.explosion_range):
+
+            # Explosión hacia arriba
+            tile = tile_here((epicenter[2], epicenter[3] - (i + 1) * TILE_SIZE))
+            if tile and arriba_libre and tile not in world.walls:
+                explosiones.append(tile)
+            else:
+                arriba_libre = False
+
+            # Explosión hacia abajo
+            tile = tile_here((epicenter[2], epicenter[3] + (i + 1) * TILE_SIZE))
+
+            if tile and abajo_libre and tile not in world.walls:
+                explosiones.append(tile)
+            else:
+                abajo_libre = False
+          
+            # Explosión hacia la izquierda
+            tile = tile_here((epicenter[2] - (i + 1) * TILE_SIZE, epicenter[3]))
+            if tile and izquierda_libre and tile not in world.walls:
+                explosiones.append(tile)
+            else:
+                izquierda_libre = False
+            
+            # Explosión hacia la derecha
+            tile = tile_here((epicenter[2] + (i + 1) * TILE_SIZE, epicenter[3]))
+            if tile and derecha_libre and tile not in world.walls:
+                explosiones.append(tile)
+            else:
+                derecha_libre = False
+            
+        
+        explosiones = [tile for tile in explosiones if tile is not None]
+
+        for tile in explosiones:
+            world.explotar(tile, tile_list)
+
+        explosiones = [tile for tile in explosiones if tile not in world.walls]
+
+        explosiones = [Explosion(explosion_images, tile[1].center) for tile in explosiones]
+
+        return explosiones
+
+
+                
+
 
 # Cargar tiles del mapa
 tile_list = []
@@ -234,7 +289,7 @@ animation_list_enemy.append(Slime(200, 200, slime_idle_images)) # los 200 que es
 
 # Bucle principal del juego 
 run = True
-explosion_epi = None
+explosions = None
 while run:
 
     # Controlar la tasa de fotogramas
@@ -256,8 +311,6 @@ while run:
                     moving_up = True
                 if event.key in [pygame.K_s, pygame.K_DOWN]:
                     moving_down = True
-                if event.key == pygame.K_SPACE:
-                    explosion_epi = explosion()
     
             # Manejar teclas soltadas
             if event.type == pygame.KEYUP:
@@ -304,12 +357,19 @@ while run:
         if object_fired:
             trown_group.add(object_fired)
         for object in trown_group:
-            object.update(screen_scroll)
+            bomb = object.update(screen_scroll)
+            if bomb:
+                explosions = explosion(bomb)
+                object.kill() 
+            else:
+                explosions = None
+
             object.draw(screen)
         
         
-        if explosion_epi:
-            explosions_group.add(explosion_epi)
+        if explosions:
+            for epicentro in explosions:
+                explosions_group.add(epicentro)
         for object in explosions_group:
             if not object.update(screen_scroll):
                 object.draw(screen)

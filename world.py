@@ -52,9 +52,11 @@ class World:
     def explotar(self, explosion_tile, tile_list):
         for tile in self.map_tiles:
             if tile == explosion_tile:
-                if tile in self.obstacles:
+                if tile in self.destroyable_blocks:
                     self.obstacles.remove(tile)
-                tile[0] = tile_list[0]
+                    self.destroyable_blocks.remove(tile)
+                    tile[0] = tile_list[0]
+                    
 
     def update(self, screen_scroll, tile_list):
         for tile in self.map_tiles:
