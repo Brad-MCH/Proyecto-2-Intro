@@ -48,7 +48,6 @@ class Explosion(sprite.Sprite):
         if not self.blown:
             surface.blit(self.image, self.rect)
         
-
 # Esta clase maneja los ataques del mago rojo.
 class RedMage:
     def __init__(self, weapons, tile_categories, explosion_imgs):
@@ -92,11 +91,6 @@ class RedMage:
         
         return object_fired
     
-    
-
-        
-
-
 class Archer:
     def __init__(self, weapons, obstacles):
         self.arrow_image = weapons[0]
@@ -105,6 +99,7 @@ class Archer:
         self.fired = False
         self.last_shot = time.get_ticks()
         self.obstacles = obstacles
+        self.explosion_range = 1
 
     def update(self, player):
         object_fired = None
@@ -140,6 +135,7 @@ class Warrior:
         self.fired = False
         self.last_shot = time.get_ticks()
         self.obstacles = obstacles
+        self.explosion_range = 1
 
     def update(self, player):
         object_fired = None
@@ -166,7 +162,6 @@ class Warrior:
             self.fired = False
         
         return object_fired
-
 
 # Esta clase maneja el ataque de bola de fuego del mago rojo.       
 class RedFireball(sprite.Sprite):
