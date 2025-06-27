@@ -8,7 +8,7 @@ class Move_enemy:
     def __init__(self, x, y, animation_list_enemy):
         self.x = x
         self.y = y
-        self.width = TILE_SIZE # Ajusta al tamaño de tu sprite
+        self.width = TILE_SIZE 
         self.height = TILE_SIZE
         self.real_x = x
         self.real_y = y 
@@ -18,9 +18,16 @@ class Move_enemy:
         self.frame = 0
         self.last_update = pygame.time.get_ticks()
         self.animation_cooldown = 120
-        self.rect = pygame.Rect(x, y, self.width, self.height)
+        self.rect = animation_list_enemy[0].get_rect()
+        self.rect.center = (x, y)
+        self.collide_rect = pygame.Rect(0, 0, 40, 40)
+        self.collide_rect.center = self.rect.center
 
-    def update(self, obstacles):
+    def update(self, obstacles, screen_scroll):
+
+        self.collide_rect.x += screen_scroll[0]
+        self.collide_rect.y += screen_scroll[1]
+
         # Movimiento aleatorio
         if pygame.time.get_ticks() - self.move_timer > 1000:
             self.direction = random.choice(['up', 'down', 'left', 'right'])
@@ -37,20 +44,23 @@ class Move_enemy:
             dx = 2
 
         # --- COLISIONES ---
-        future_rect = self.rect.move(dx, dy)
-        collision = False
+        self.collide_rect.x += dx
         for obstacle in obstacles:
-            if future_rect.colliderect(obstacle):
-                collision = True
-                break
+            if self.collide_rect.colliderect(obstacle):
+                if dx > 0:
+                    self.collide_rect.right = obstacle.left
+                if dx < 0:
+                    self.collide_rect.left = obstacle.right
 
-        # Solo se mueve si NO hay colisión
-        if not collision:
-            self.real_y += dy
-            self.real_x += dx
-        # Actualiza el rect para colisiones
-        self.rect.x = self.real_x
-        self.rect.y = self.real_y
+        self.collide_rect.y += dy
+        for obstacle in obstacles:
+            if self.collide_rect.colliderect(obstacle):
+                if dy > 0:
+                    self.collide_rect.bottom = obstacle.top
+                if dy < 0:
+                    self.collide_rect.top = obstacle.bottom
+
+        self.rect.center = (self.collide_rect.centerx, self.collide_rect.centery)
 
         # Animación
         now = pygame.time.get_ticks()
@@ -59,10 +69,7 @@ class Move_enemy:
             self.last_update = now
 
     def draw(self, surface, screen_scroll):
-        screen_x = self.rect.x + screen_scroll[0]
-        screen_y = self.rect.y + screen_scroll[1]
-        if (-TILE_SIZE < screen_x < SCREEN_WIDTH and -TILE_SIZE < screen_y < SCREEN_HEIGHT):
-            surface.blit(self.animation_list_enemy[self.frame], (screen_x, screen_y))
+        surface.blit(self.animation_list_enemy[self.frame], (self.rect.x, self.rect.y))
 
 
 class Slime(Move_enemy):

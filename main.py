@@ -403,14 +403,9 @@ while run:
 
         # Dibuja a los enemigos
         for enemy in world.enemies:
-            enemy.update(world.get_obstacle_rects())
+            enemy.update(world.get_obstacle_rects(), screen_scroll)
         
-        # Dibuja SOLO los que están en pantalla
-        for enemy in world.enemies:
-            screen_x = enemy.rect.x + screen_scroll[0]
-            screen_y = enemy.rect.y + screen_scroll[1]
-            if (-TILE_SIZE < screen_x < SCREEN_WIDTH and -TILE_SIZE < screen_y < SCREEN_HEIGHT):
-                enemy.draw(screen, screen_scroll)
+            enemy.draw(screen, screen_scroll)
 
         # Dibuja la pantalla según el estado
     elif ESTADO == "menu":
