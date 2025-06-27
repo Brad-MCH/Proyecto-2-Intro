@@ -11,6 +11,7 @@ system("cls")
 
 pygame.init()
 
+interactables_group = pygame.sprite.Group()
 # el jugador no se ha creado
 player = None
 seleccionando_personaje = False
@@ -50,8 +51,9 @@ def ventana_salir():
     clock.tick(60)
 
 # Variables del juego
-level = 1  # Establecer el nivel a cargar
+level = 0  # Establecer el nivel a cargar
 screen_scroll = [0, 0]  # Inicializar la posición de desplazamiento de la pantalla
+interactables = None  # Inicializar la lista de objetos interactivos
 
 # Definir variables de movimiento del jugador
 moving_left = False
@@ -130,8 +132,9 @@ for i in range(4):
 
 # Animaciones de las clases
 def seleccionar_mago():
-    global ESTADO, player, world, personaje_activo
-    world.load_map(world_data, tile_list, mage_animations, ENEMY_TYPES, spike_trap_images)
+    global ESTADO, player, world, personaje_activo, interactables_group
+    interactables = world.load_map(world_data, tile_list, mage_animations, ENEMY_TYPES, spike_trap_images)
+    interactables_group = pygame.sprite.Group(interactables)
     player = world.player
     personaje_activo = RedMage(red_mage_weapons, world.tile_categories, explosion_images)
     ESTADO = "juego"
@@ -148,6 +151,13 @@ def seleccionar_guerrero():
     world.load_map(world_data, tile_list, warrior_animations, ENEMY_TYPES)
     player = world.player
     personaje_activo = Warrior(warrior_weapons, world.obstacles)
+    ESTADO = "juego"
+
+def selecionar_skin(armas, clase):
+    global ESTADO, player, world, personaje_activo
+    interactables = world.load_map(world_data, tile_list, mage_animations, ENEMY_TYPES, spike_trap_images)
+    player = world.player
+    personaje_activo = clase(armas, world.tile_categories, explosion_images)
     ESTADO = "juego"
 
 def display_info():
@@ -404,8 +414,11 @@ while run:
         # Dibuja a los enemigos
         for enemy in world.enemies:
             enemy.update(world.get_obstacle_rects(), screen_scroll)
-        
             enemy.draw(screen, screen_scroll)
+
+        for interactable in interactables_group:
+            interactable.update(screen_scroll, player)
+            interactable.draw(screen)
 
         # Dibuja la pantalla según el estado
     elif ESTADO == "menu":

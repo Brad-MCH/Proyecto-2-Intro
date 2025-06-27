@@ -72,6 +72,7 @@ class Move_enemy:
         surface.blit(self.animation_list_enemy[self.frame], (self.rect.x, self.rect.y))
 
 
+
 class Slime(Move_enemy):
     def __init__(self, x, y, animation_list_enemy):
         super().__init__(x, y, animation_list_enemy)

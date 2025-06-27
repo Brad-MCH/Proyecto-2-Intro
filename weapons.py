@@ -2,7 +2,6 @@ from pygame import *
 import math
 from constants import *
 
-
 class Explosion(sprite.Sprite):
     def __init__(self, animation_list, epicenter):
         sprite.Sprite.__init__(self)
