@@ -1,6 +1,7 @@
 from player import Player
 from constants import *
 from enemies import *
+from pygame import *
 
 
 class World:
@@ -17,8 +18,9 @@ class World:
             "map_tiles": self.map_tiles
         }
         self.player = None
+        self.traps = []
 
-    def load_map(self, map_data, tile_list, animation_list, enemy_types):
+    def load_map(self, map_data, tile_list, animation_list, enemy_types, spike_trap_animations):
 
         for y, row in enumerate(map_data):
             for x, tile in enumerate(row):
@@ -49,6 +51,10 @@ class World:
                     
                     tile_data[0] = tile_list[0] # Cambiar el tile del jugador a un tile vacío
 
+                if tile == 12: # Trampa de pinchos
+                    trap = Spike_trap(tile_data, spike_trap_animations)
+                    self.traps.append(trap)
+
                 if tile in enemy_types:
                     enemy_class, enemy_animations = enemy_types[tile]
                     enemy = enemy_class(x * TILE_SIZE, y * TILE_SIZE, enemy_animations)
@@ -69,12 +75,6 @@ class World:
 
     def update(self, screen_scroll, tile_list):
         for tile in self.map_tiles:
-
-            if tile[4]: # Hubo una explosión en el tile
-                tile[4] = False
-                print(tile[5])
-                    
-
             tile[2] += screen_scroll[0]
             tile[3] += screen_scroll[1]
             tile[1].center = (tile[2], tile[3])
@@ -85,4 +85,46 @@ class World:
     
     def get_obstacle_rects(self): # Para los enemigos
         return [tile[1] for tile in self.obstacles]
+    
+class Spike_trap:
+    def __init__(self, tile, animation_list):
+        self.rect = animation_list[0].get_rect()
+        self.rect.centerx = tile[1].x
+        self.rect.centery = tile[1].y
+        self.animation_list = animation_list
+        self.frame = 0
+        self.last_update = pygame.time.get_ticks()
+        self.animation_cooldown = 75
+        self.last_spike = pygame.time.get_ticks()
+        self.pierce_cooldown = 2000
+        self.pierce = False
+        self.last_hit = 0
+
+    def update(self, screen_scroll, player):
+        self.rect.x += screen_scroll[0]
+        self.rect.y += screen_scroll[1]
+
+
+
+        now = pygame.time.get_ticks()
+
+        if now - self.last_spike > self.pierce_cooldown:
+            self.pierce = True
+            self.last_spike = now
+
+        if now - self.last_update > self.animation_cooldown and self.pierce:
+            self.frame = (self.frame + 1) if self.frame < 3 else 0
+            self.last_update = now
+            self.pierce = False if self.frame == 0 else True
+
+        
+        if self.pierce:
+            if self.rect.colliderect(player.collide_rect) and now - self.last_hit > 1000:  
+                player.health -= 20
+                self.last_hit = now
+                
+
+
+    def draw(self, surface):
+        surface.blit(self.animation_list[self.frame], (self.rect.x, self.rect.y))
             

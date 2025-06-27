@@ -2,12 +2,6 @@ from pygame import *
 import math
 from constants import *
 
-def mouse_tile_index(map_tiles, explosion_img):
-    mouse_rect = Rect(mouse.get_pos()[0], mouse.get_pos()[1], 1, 1)
-
-    for tile in map_tiles:
-        if tile[1].colliderect(mouse_rect):
-            print(f"Tile {tile[5]} clicked at {tile[2]}, {tile[3]}")
 
 class Explosion(sprite.Sprite):
     def __init__(self, animation_list, epicenter):

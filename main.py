@@ -121,10 +121,17 @@ for i in range(6):
     img = scale_image_by_height(img, TILE_SIZE)
     explosion_images.append(img)
 
+# Imagenes de trampa de pinchos
+spike_trap_images = []
+for i in range(4):
+    img = pygame.image.load(f"assets/images/spikes/{i}.png").convert_alpha()
+    img = scale_image_by_height(img, TILE_SIZE)
+    spike_trap_images.append(img)
+
 # Animaciones de las clases
 def seleccionar_mago():
     global ESTADO, player, world, personaje_activo
-    world.load_map(world_data, tile_list, mage_animations, ENEMY_TYPES)
+    world.load_map(world_data, tile_list, mage_animations, ENEMY_TYPES, spike_trap_images)
     player = world.player
     personaje_activo = RedMage(red_mage_weapons, world.tile_categories, explosion_images)
     ESTADO = "juego"
@@ -210,13 +217,23 @@ def explosion(epi):
             
         
         explosiones = [tile for tile in explosiones if tile is not None]
-
+        
         for tile in explosiones:
             world.explotar(tile, tile_list)
 
         explosiones = [tile for tile in explosiones if tile not in world.walls]
 
+        for explosion in explosiones:
+            if explosion[1].colliderect(player.collide_rect):
+                player.health -= 50
+                break
+
+
+
         explosiones = [Explosion(explosion_images, tile[1].center) for tile in explosiones]
+
+        
+
 
         return explosiones
 
@@ -274,8 +291,6 @@ img_guerrero = warrior_animations[0][0]
 
 trown_group = pygame.sprite.Group()
 explosions_group = pygame.sprite.Group()
-
-from weapons import mouse_tile_index
 
 # Cargar animaciones de los enemigos
 slime_idle_images = []
@@ -348,10 +363,15 @@ while run:
 
         # Dibujar el mundo
         world.draw(screen)
+        for trap in world.traps:
+            trap.draw(screen)
         
         # Actualizar objetos en el mundo
         player.update()
         world.update(screen_scroll, tile_list)
+        for trap in world.traps:
+            trap.update(screen_scroll, player)
+        
 
         object_fired = personaje_activo.update(player)
 
