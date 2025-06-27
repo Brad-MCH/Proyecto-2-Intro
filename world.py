@@ -1,5 +1,7 @@
 from player import Player
 from constants import *
+from enemies import *
+
 
 class World:
     def __init__(self):
@@ -7,6 +9,7 @@ class World:
         self.obstacles = []
         self.destroyable_blocks = []
         self.walls = []
+        self.enemies = []
         self.tile_categories = {
             "obstacles": self.obstacles,
             "destroyable_blocks": self.destroyable_blocks,
@@ -15,7 +18,7 @@ class World:
         }
         self.player = None
 
-    def load_map(self, map_data, tile_list, animation_list):
+    def load_map(self, map_data, tile_list, animation_list, enemy_types):
 
         for y, row in enumerate(map_data):
             for x, tile in enumerate(row):
@@ -45,6 +48,12 @@ class World:
         
                     
                     tile_data[0] = tile_list[0] # Cambiar el tile del jugador a un tile vacío
+
+                if tile in enemy_types:
+                    enemy_class, enemy_animations = enemy_types[tile]
+                    enemy = enemy_class(x * TILE_SIZE, y * TILE_SIZE, enemy_animations)
+                    self.enemies.append(enemy)
+                    tile_data[0] = tile_list[0]
 
                 if tile >= 0:
                     self.map_tiles.append(tile_data) # Esta lista contiene todos los tiles del mapa

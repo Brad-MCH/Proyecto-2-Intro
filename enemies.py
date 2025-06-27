@@ -1,7 +1,8 @@
 import pygame
-import math
 from constants import *
 import random
+
+
 
 class Move_enemy:
     def __init__(self, x, y, animation_list_enemy):
@@ -69,4 +70,3 @@ class Slime(Move_enemy):
         super().__init__(x, y, animation_list_enemy)
         self.frame = 0
 
-    

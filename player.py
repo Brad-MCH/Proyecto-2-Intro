@@ -2,12 +2,11 @@ import pygame
 import math
 from constants import *
 
-
 class Player:
-    def __init__(self, x, y, animation_list):
-        self.health = HEALTH_PJ
-        self.mana = MANA_PJ
-        self.strong = STRONG_PJ
+    def __init__(self, x, y, animation_list, health=HEALTH_PJ, mana=MANA_PJ, strong=STRONG_PJ):
+        self.health = health
+        self.mana = mana
+        self.strong = strong
         self.last_mov = 0
         self.frame_index = 0
         self.action = 0 # 0:idle, 1:corriendo_arriba, 2:corriendo_abajo, 3:corriendo_izquierda, 4:corriendo_derecha, 5:corriendo_arriba_izquierda, 6:corriendo_arriba_derecha, 7:corriendo_abajo_izquierda, 8:corriendo_abajo_derecha
@@ -16,7 +15,7 @@ class Player:
         self.image = animation_list[self.action][self.frame_index]
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
-
+        
         self.collide_rect = pygame.Rect(0, 0, 40, 40)
         self.collide_rect.center = self.rect.center
 
@@ -199,10 +198,7 @@ class Player:
 aqui queria hacer las stats de cada clase, tengo que definir los numeros de cada stat pero ahorita todos estan en 10 y falta implementarlo en los pj'''
 class Mage(Player):
     def __init__(self, x, y, animation_list):
-        super().__init__(x, y, animation_list)
-        self.mana = MANA_PJ
-        self.health = HEALTH_PJ
-        self.strong = STRONG_PJ
+        super().__init__(x, y, animation_list, health=80, mana=120, strong=8)
 
     def update(self):
         super().update()
@@ -210,10 +206,7 @@ class Mage(Player):
 
 class Archer(Player):
     def __init__(self, x, y, animation_list):
-        super().__init__(x, y, animation_list)
-        self.mana = MANA_PJ
-        self.health = HEALTH_PJ
-        self.strong = STRONG_PJ
+        super().__init__(x, y, animation_list, health=100, mana=80, strong=10)
 
     def update(self):
         super().update()
@@ -221,10 +214,7 @@ class Archer(Player):
 
 class Warrior(Player):
     def __init__(self, x, y, animation_list):
-        super().__init__(x, y, animation_list)
-        self.mana = MANA_PJ
-        self.health = HEALTH_PJ
-        self.strong = STRONG_PJ
+        super().__init__(x, y, animation_list, health=120, mana=60, strong=15)
 
     def update(self):
         super().update()

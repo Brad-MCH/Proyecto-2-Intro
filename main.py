@@ -124,21 +124,21 @@ for i in range(6):
 # Animaciones de las clases
 def seleccionar_mago():
     global ESTADO, player, world, personaje_activo
-    world.load_map(world_data, tile_list, mage_animations)
+    world.load_map(world_data, tile_list, mage_animations, ENEMY_TYPES)
     player = world.player
     personaje_activo = RedMage(red_mage_weapons, world.tile_categories, explosion_images)
     ESTADO = "juego"
 
 def seleccionar_arquero():
     global ESTADO, player, world, personaje_activo
-    world.load_map(world_data, tile_list, archer_animations)
+    world.load_map(world_data, tile_list, archer_animations, ENEMY_TYPES)
     player = world.player
     personaje_activo = Archer(archer_weapons, world.obstacles)
     ESTADO = "juego"
 
 def seleccionar_guerrero():
     global ESTADO, player, world, personaje_activo
-    world.load_map(world_data, tile_list, warrior_animations)
+    world.load_map(world_data, tile_list, warrior_animations, ENEMY_TYPES)
     player = world.player
     personaje_activo = Warrior(warrior_weapons, world.obstacles)
     ESTADO = "juego"
@@ -276,6 +276,7 @@ trown_group = pygame.sprite.Group()
 explosions_group = pygame.sprite.Group()
 
 from weapons import mouse_tile_index
+
 # Cargar animaciones de los enemigos
 slime_idle_images = []
 for i in range(6):  # Slime
@@ -283,9 +284,9 @@ for i in range(6):  # Slime
     img = scale_image_by_height(img, PLAYER_HEIGHT)  
     slime_idle_images.append(img)
 
-# Cargar los enemigos
-animation_list_enemy = []
-animation_list_enemy.append(Slime(200, 200, slime_idle_images)) # los 200 que estan ahi es la posicion
+ENEMY_TYPES = {
+    11: (Slime, slime_idle_images),  # 11 es el tile del slime
+}
 
 # Bucle principal del juego 
 run = True
@@ -381,9 +382,15 @@ while run:
         display_info()
 
         # Dibuja a los enemigos
-        for enemy in animation_list_enemy:
+        for enemy in world.enemies:
             enemy.update(world.get_obstacle_rects())
-            enemy.draw(screen, screen_scroll)
+        
+        # Dibuja SOLO los que están en pantalla
+        for enemy in world.enemies:
+            screen_x = enemy.rect.x + screen_scroll[0]
+            screen_y = enemy.rect.y + screen_scroll[1]
+            if (-TILE_SIZE < screen_x < SCREEN_WIDTH and -TILE_SIZE < screen_y < SCREEN_HEIGHT):
+                enemy.draw(screen, screen_scroll)
 
         # Dibuja la pantalla según el estado
     elif ESTADO == "menu":
