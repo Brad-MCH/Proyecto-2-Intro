@@ -18,6 +18,7 @@ class Player:
         
         self.collide_rect = pygame.Rect(0, 0, 40, 40)
         self.collide_rect.center = self.rect.center
+        self.key = None
 
     def move(self, dx, dy, obstacles):
 

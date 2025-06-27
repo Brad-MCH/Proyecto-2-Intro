@@ -19,7 +19,12 @@ class World:
         }
         self.player = None
         self.traps = []
-        self.interactables = []  
+        self.interactables = []
+        self.key = None
+        self.key_tile = None
+        self.exit_tile = None
+        self.exit_open = False
+        self.open_rect = Rect(0, 0, 100, 100)   
 
     def load_map(self, map_data, tile_list, animation_list, enemy_types, spike_trap_animations):
 
@@ -66,6 +71,17 @@ class World:
                     potion = Potion(tile_list, (img_rect.x, img_rect.y), tile)
                     self.interactables.append(potion)
                     tile_data[0] = tile_list[0]
+                    
+                
+                if tile == 16: # llave
+                    self.key = Key(tile_list, (img_rect.x, img_rect.y))
+                    self.interactables.append(self.key)
+                    tile_data[0] = tile_list[0]
+                    self.key_tile = tile_data
+                    self.obstacles.append(tile_data) 
+
+                if tile == 13: # Salida
+                    self.exit_tile = tile_data
 
                 if tile >= 0:
                     self.map_tiles.append(tile_data) # Esta lista contiene todos los tiles del mapa
@@ -81,17 +97,32 @@ class World:
                     self.obstacles.remove(tile)
                     self.destroyable_blocks.remove(tile)
                     tile[0] = tile_list[0]
+                
+                if tile == self.key_tile:
+                    self.key.found = True
+                    self.obstacles.remove(tile)
+                    tile[0] = tile_list[0]
+                    
                     
 
-    def update(self, screen_scroll, tile_list):
+    def update(self, screen_scroll, tile_list, player):
         for tile in self.map_tiles:
             tile[2] += screen_scroll[0]
             tile[3] += screen_scroll[1]
             tile[1].center = (tile[2], tile[3])
 
+        self.open_rect.center = self.exit_tile[1].center
+          
+        if self.open_rect.colliderect(player.collide_rect) and not self.exit_open:
+            if player.key:
+                self.exit_open = True
+                self.exit_tile[0] = tile_list[8]
+            
+
     def draw(self, screen):
         for tile in self.map_tiles:
             screen.blit(tile[0], tile[1])
+        pygame.draw.rect(screen, RED, self.open_rect, 1)
     
     def get_obstacle_rects(self): # Para los enemigos
         return [tile[1] for tile in self.obstacles]
@@ -159,11 +190,35 @@ class Potion(sprite.Sprite):
                 player.health += 20
                 if player.health > HEALTH_PJ:
                     player.health = HEALTH_PJ
-        
+
             self.kill()
     
     def draw(self, surface):
         surface.blit(self.image, self.rect.topleft)
         pygame.draw.rect(surface, RED, self.rect, 1)  # Dibujar
 
-        
+class Key(sprite.Sprite):
+    def __init__(self, tile_list, center):
+        sprite.Sprite.__init__(self)
+        self.tile_list = tile_list
+        self.image = tile_list[9]
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.found = False
+    
+    def update(self, screen_scroll, player):
+        self.rect.x += screen_scroll[0]
+        self.rect.y += screen_scroll[1]
+
+        if self.found:
+            self.image = self.tile_list[16]
+
+            if self.rect.colliderect(player.collide_rect):
+                player.key = True
+                self.kill()
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect.topleft)
+        pygame.draw.rect(surface, RED, self.rect, 1)
+
+

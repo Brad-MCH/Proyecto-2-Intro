@@ -130,6 +130,11 @@ for i in range(4):
     img = scale_image_by_height(img, TILE_SIZE)
     spike_trap_images.append(img)
 
+faded_key = pygame.image.load("assets/images/items/faded_key.png").convert_alpha()
+faded_key = scale_image_by_height(faded_key, ITEM_SIZE)
+level_key = pygame.image.load("assets/images/items/key.png").convert_alpha()
+level_key = scale_image_by_height(level_key, ITEM_SIZE)
+
 # Animaciones de las clases
 def seleccionar_mago():
     global ESTADO, player, world, personaje_activo, interactables_group
@@ -174,6 +179,11 @@ def display_info():
         if (i * 10) <= player.mana < ((i * 10) + 10):
             screen.blit(mana[10-i], (10*30, -15))
             continue
+    
+    if not player.key:
+        screen.blit(faded_key, (SCREEN_WIDTH - ITEM_SIZE - 10, 10))
+    else:
+        screen.blit(level_key, (SCREEN_WIDTH - ITEM_SIZE - 10, 10))
        
 def tile_here(center):
     pos_rect = Rect(center[0], center[1], 1, 1)
@@ -238,18 +248,9 @@ def explosion(epi):
                 player.health -= 50
                 break
 
-
-
         explosiones = [Explosion(explosion_images, tile[1].center) for tile in explosiones]
 
-        
-
-
         return explosiones
-
-
-                
-
 
 # Cargar tiles del mapa
 tile_list = []
@@ -358,7 +359,6 @@ while run:
         dx = 0
         dy = 0
         
-    
         if moving_right: 
             dx = PLAYER_SPEED
         if moving_left:
@@ -378,7 +378,7 @@ while run:
         
         # Actualizar objetos en el mundo
         player.update()
-        world.update(screen_scroll, tile_list)
+        world.update(screen_scroll, tile_list, player)
         for trap in world.traps:
             trap.update(screen_scroll, player)
         
@@ -416,9 +416,19 @@ while run:
             enemy.update(world.get_obstacle_rects(), screen_scroll)
             enemy.draw(screen, screen_scroll)
 
+
         for interactable in interactables_group:
             interactable.update(screen_scroll, player)
             interactable.draw(screen)
+
+
+        exit_rect = Rect(0, 0, 5, 5)
+        exit_rect.center = world.exit_tile[1].center
+        pygame.draw.rect(screen, (255, 0, 0), exit_rect, 1)
+        pygame.draw.rect(screen, (0, 255, 0), world.exit_tile[1], 1)
+
+        if exit_rect.colliderect(player.collide_rect) and world.exit_open:
+            print("¡Has ganado!")
 
         # Dibuja la pantalla según el estado
     elif ESTADO == "menu":
