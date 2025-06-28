@@ -144,7 +144,7 @@ def ventana_configuracion():
 def reiniciar_juego():
     global player, personaje_activo, world, level, pociones, interactables_group, world_data, explosions_group, trown_group
 
-    level = 0
+    level = 1
     pociones = []
     trown_group.empty()
     explosions_group.empty()
@@ -274,6 +274,8 @@ def informacion():
     screen.blit(foto1, (80, y_fotos))
     screen.blit(foto2, (220, y_fotos))
 
+    draw_button("regresar al menu", 500, 350, 200, 60, (70, 130, 180), (100, 180, 250), regresar)
+
 def guardar_score():
     global player_name, score
     if not player_name:
@@ -313,7 +315,7 @@ def mostrar_leaderboard(offset_y=50):
 escape_pressed = False # Boton de pausa
 
 # Variables del juego
-level = 1  # Establecer el nivel a cargar
+level = 4  # Establecer el nivel a cargar
 screen_scroll = [0, 0]  # Inicializar la posición de desplazamiento de la pantalla
 interactables = None  # Inicializar la lista de objetos interactivos
 score = 0
