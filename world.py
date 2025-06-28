@@ -24,7 +24,9 @@ class World:
         self.key_tile = None
         self.exit_tile = None
         self.exit_open = False
-        self.open_rect = Rect(0, 0, 100, 100)   
+        self.open_rect = Rect(0, 0, 100, 100)
+        self.lava_ice_tiles = []
+        self.last_hit = 0   
 
     def load_map(self, map_data, tile_list, animation_list, enemy_types, spike_trap_animations):
 
@@ -67,7 +69,7 @@ class World:
                     self.enemies.append(enemy)
                     tile_data[0] = tile_list[0]
 
-                if tile in (14, 15): # Poción de maná o salud
+                if tile in (14, 15, 19, 20): # Poción de maná o salud
                     potion = Potion(tile_list, (img_rect.x, img_rect.y), tile)
                     self.interactables.append(potion)
                     tile_data[0] = tile_list[0]
@@ -82,6 +84,9 @@ class World:
 
                 if tile == 13: # Salida
                     self.exit_tile = tile_data
+
+                if tile in (17, 18): # Lava o hielo
+                    self.lava_ice_tiles.append(tile_data)
 
                 if tile >= 0:
                     self.map_tiles.append(tile_data) # Esta lista contiene todos los tiles del mapa
@@ -117,6 +122,13 @@ class World:
             if player.key:
                 self.exit_open = True
                 self.exit_tile[0] = tile_list[8]
+
+        for pit in self.lava_ice_tiles:
+            if pit[1].colliderect(player.collide_rect):
+                if pygame.time.get_ticks() - self.last_hit > 500:
+                    player.health -= 10
+                    self.last_hit = pygame.time.get_ticks()
+                    
             
 
     def draw(self, screen):
@@ -176,24 +188,21 @@ class Potion(sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = center
         self.tipe = tipe
+        self.done = False
 
-    def update(self, screen_scroll, player):
+    def update(self, screen_scroll, player, active_pj):
         self.rect.x += screen_scroll[0]
         self.rect.y += screen_scroll[1]
 
         if self.rect.colliderect(player.collide_rect):
-            if self.tipe == 14:
-                player.mana += 20
-                if player.mana > MANA_PJ:
-                    player.mana = MANA_PJ
-            elif self.tipe == 15:
-                player.health += 20
-                if player.health > HEALTH_PJ:
-                    player.health = HEALTH_PJ
+            self.done = True
+            return self.tipe
 
-            self.kill()
+            
     
     def draw(self, surface):
+        if self.done:
+            self.kill()
         surface.blit(self.image, self.rect.topleft)
         pygame.draw.rect(surface, RED, self.rect, 1)  # Dibujar
 
@@ -206,7 +215,7 @@ class Key(sprite.Sprite):
         self.rect.center = center
         self.found = False
     
-    def update(self, screen_scroll, player):
+    def update(self, screen_scroll, player, active_pj):
         self.rect.x += screen_scroll[0]
         self.rect.y += screen_scroll[1]
 
@@ -220,5 +229,4 @@ class Key(sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect.topleft)
         pygame.draw.rect(surface, RED, self.rect, 1)
-
 

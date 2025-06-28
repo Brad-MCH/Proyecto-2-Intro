@@ -184,6 +184,11 @@ def display_info():
         screen.blit(faded_key, (SCREEN_WIDTH - ITEM_SIZE - 10, 10))
     else:
         screen.blit(level_key, (SCREEN_WIDTH - ITEM_SIZE - 10, 10))
+
+    if pociones is not None:
+        for i, pocion in enumerate(pociones):
+            screen.blit(tile_list[pocion], (SCREEN_WIDTH - ITEM_SIZE - 10, 10 + (i + 1) * (ITEM_SIZE + 5)))
+
        
 def tile_here(center):
     pos_rect = Rect(center[0], center[1], 1, 1)
@@ -252,6 +257,56 @@ def explosion(epi):
 
         return explosiones
 
+def next_level():
+    global level, world, ESTADO, player, personaje_activo, interactables_group
+    level += 1
+    
+    if level > 4:  
+        pygame.quit()
+        exit()
+    else:
+
+        world_data = [[-1 for _ in range(WORLD_COLS)] for _ in range(WORLD_ROWS)]
+
+        # Cargar datos del mundo desde un archivo CSV
+        with open(f"levels/level{level}.csv", newline='') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            for y, row in enumerate(reader):
+                for x, tile in enumerate(row):
+                    world_data[y][x] = int(tile)
+
+        world = World()
+        interactables = world.load_map(world_data, tile_list, mage_animations, ENEMY_TYPES, spike_trap_images)
+        interactables_group = pygame.sprite.Group(interactables)
+        player = world.player
+        personaje_activo = RedMage(red_mage_weapons, world.tile_categories, explosion_images)
+        ESTADO = "juego"
+
+def manage_inventory(index):
+    global pociones
+
+    try:
+        pocion = pociones[index]
+        pociones.pop(index)
+    except:
+        return
+    
+    if pocion == 14:
+        player.mana += 20
+        if player.mana > 100:
+            player.mana = 100
+        
+    elif pocion == 15:
+        player.health += 20
+        if player.health > 100:
+            player.health = 100
+
+    elif pocion == 19:
+        personaje_activo.explosion_range += 1
+    
+    elif pocion == 20:
+        player.speed_boost += 3
+
 # Cargar tiles del mapa
 tile_list = []
 for i in range(TILE_TYPES):
@@ -317,6 +372,8 @@ ENEMY_TYPES = {
 # Bucle principal del juego 
 run = True
 explosions = None
+pociones = []
+NUMBER_KEYS = (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9)
 while run:
 
     # Controlar la tasa de fotogramas
@@ -338,6 +395,10 @@ while run:
                     moving_up = True
                 if event.key in [pygame.K_s, pygame.K_DOWN]:
                     moving_down = True
+                if event.key in NUMBER_KEYS:
+                    index = NUMBER_KEYS.index(event.key)
+                    manage_inventory(index)
+                
     
             # Manejar teclas soltadas
             if event.type == pygame.KEYUP:
@@ -360,13 +421,13 @@ while run:
         dy = 0
         
         if moving_right: 
-            dx = PLAYER_SPEED
-        if moving_left:
-            dx = -PLAYER_SPEED
+            dx = PLAYER_SPEED + player.speed_boost
+        if moving_left: 
+            dx = -PLAYER_SPEED - player.speed_boost
         if moving_up:
-            dy = -PLAYER_SPEED
+            dy = -PLAYER_SPEED - player.speed_boost
         if moving_down:
-            dy = PLAYER_SPEED
+            dy = PLAYER_SPEED + player.speed_boost
          
         # Mover jugador
         screen_scroll = player.move(dx, dy, world.get_obstacle_rects())
@@ -418,9 +479,13 @@ while run:
 
 
         for interactable in interactables_group:
-            interactable.update(screen_scroll, player)
+            pocim = interactable.update(screen_scroll, player, personaje_activo)
             interactable.draw(screen)
 
+            if pocim != None:
+                pociones.append(pocim)
+
+        #print(pociones)
 
         exit_rect = Rect(0, 0, 5, 5)
         exit_rect.center = world.exit_tile[1].center
@@ -428,7 +493,7 @@ while run:
         pygame.draw.rect(screen, (0, 255, 0), world.exit_tile[1], 1)
 
         if exit_rect.colliderect(player.collide_rect) and world.exit_open:
-            print("¡Has ganado!")
+            next_level()
 
         # Dibuja la pantalla según el estado
     elif ESTADO == "menu":
