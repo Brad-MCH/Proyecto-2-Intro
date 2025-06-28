@@ -66,7 +66,7 @@ def ventana_salir():
     clock.tick(60)
 
 # Variables del juego
-level = 0  # Establecer el nivel a cargar
+level = 1  # Establecer el nivel a cargar
 screen_scroll = [0, 0]  # Inicializar la posición de desplazamiento de la pantalla
 interactables = None  # Inicializar la lista de objetos interactivos
 
@@ -282,7 +282,8 @@ def explosion(epi):
         return explosiones
 
 def next_level():
-    global level, world, ESTADO, player, personaje_activo, interactables_group
+    global level, world, ESTADO, player, personaje_activo, interactables_group, pociones
+    pociones = []
     level += 1
     
     if level > 4:  
