@@ -23,10 +23,28 @@ mixer.Sound.set_volume(explosion_sound, 0.5)
 enemy_hit_sound = mixer.Sound("assets/sound/enemy_hurt.mp3")
 mixer.Sound.set_volume(enemy_hit_sound, 0.5)
 
-player_hurt_sound = mixer.Sound("assets/sound/player_hurt.mp3")
-mixer.Sound.set_volume(player_hurt_sound, 0.5)
+def draw_volume_slider(x, y, width, height, volume):
+    # Dibuja la barra de fondo
+    pygame.draw.rect(screen, (100, 100, 100), (x, y, width, height))
+    # Dibuja la barra de volumen actual
+    pygame.draw.rect(screen, (70, 130, 180), (x, y, int(width * volume), height))
+    # Dibuja el "handle"
+    handle_x = x + int(width * volume)
+    pygame.draw.circle(screen, (255, 255, 255), (handle_x, y + height // 2), height // 2 + 2)
+
+def handle_volume_slider(x, y, width, height, event):
+    mouse = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed()
+    if click[0] and x <= mouse[0] <= x + width and y <= mouse[1] <= y + height:
+        # Calcula el nuevo volumen
+        new_volume = (mouse[0] - x) / width
+        new_volume = max(0, min(1, new_volume))
+        mixer.music.set_volume(new_volume)
+        return new_volume
+    return None
 
 interactables_group = pygame.sprite.Group()
+
 # el jugador no se ha creado
 player = None
 seleccionando_personaje = False
@@ -55,6 +73,9 @@ def draw_button(text, x, y, width, height, color, hover_color, action=None):
 
 draw_button.clicked = False
 
+bloquear_disparo = False
+
+#botones del menu 
 def ventana_jugar():
     global ESTADO
     ESTADO = "seleccion_PJ"
@@ -65,8 +86,142 @@ def ventana_salir():
     pygame.display.update()
     clock.tick(60)
 
+def ventana_configuracion():
+    global ESTADO
+    ESTADO = "configuracion"
+
+def reiniciar_juego():
+    global player, personaje_activo, world, level, pociones, interactables_group, world_data, explosions_group, trown_group
+
+    level = 0
+    pociones = []
+    trown_group.empty()
+    explosions_group.empty()
+
+    # Reiniciar datos del mundo
+    world_data = [[-1 for _ in range(WORLD_COLS)] for _ in range(WORLD_ROWS)]
+    with open(f"levels/level{level}.csv", newline='') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        for y, row in enumerate(reader):
+            for x, tile in enumerate(row):
+                world_data[y][x] = int(tile)
+
+    world = World()
+    interactables = world.load_map(world_data, tile_list, mage_animations, ENEMY_TYPES, spike_trap_images)
+    interactables_group = pygame.sprite.Group(interactables)
+    player = world.player
+    personaje_activo = None
+
+    # Reiniciar vida y mana si el jugador ya existe
+    if player is not None:
+        player.health = 100
+        player.mana = 100
+        player.key = False
+        player.speed_boost = 0
+
+def regresar():
+    global ESTADO
+    ESTADO = "menu"
+    reiniciar_juego()
+
+def cambiar_estado(nuevo_estado):
+    global ESTADO, bloquear_disparo
+    ESTADO = nuevo_estado
+    if nuevo_estado == "menu":
+        reiniciar_juego()
+    if nuevo_estado == "juego":
+        bloquear_disparo = True
+        if player is not None:
+            player.health = 100
+            player.mana = 100
+
+def mostrar_info():
+    screen.fill((40, 25, 25))
+    font_titulo = pygame.font.Font(FONT_PATH, 50)
+    font_texto = pygame.font.Font(FONT_PATH, 30)
+
+    # Título
+    titulo = font_titulo.render("Ayuda y Controles", True, (255, 255, 255))
+    screen.blit(titulo, (SCREEN_WIDTH//2 - titulo.get_width()//2, 40))
+
+    # Controles
+    controles = [
+        "Moverse: W, A, S, D o Flechas",
+        "Pausa: ESC",
+        "Lanzar bomba/disparo: Click izquierdo",
+        "Usar pociones: Teclas 1-9",
+    ]
+    for i, texto in enumerate(controles):
+        t = font_texto.render(texto, True, (200, 200, 200))
+        screen.blit(t, (80, 120 + i*40))
+
+    # Objetivo
+    objetivo = font_texto.render("Objetivo: Llega a la salida y derrota a los enemigos mientras bajas de nivel.", True, (255, 220, 100))
+    screen.blit(objetivo, (80, 300))
+
+    # Imágenes alineadas con su texto
+    y_iconos = 370
+    espacio = 60
+
+    # Vida
+    screen.blit(full_hearth, (80, y_iconos))
+    leyenda_vida = font_texto.render("Vida", True, (200, 200, 200))
+    screen.blit(leyenda_vida, (80 + full_hearth.get_width() + 15, y_iconos + full_hearth.get_height()//2 - leyenda_vida.get_height()//2))
+
+    # Mana
+    screen.blit(mana[0], (300, y_iconos))
+    leyenda_mana = font_texto.render("Mana", True, (200, 200, 200))
+    screen.blit(leyenda_mana, (300 + mana[0].get_width() + 15, y_iconos + mana[0].get_height()//2 - leyenda_mana.get_height()//2))
+
+    # Llave
+    screen.blit(level_key, (520, y_iconos))
+    leyenda_llave = font_texto.render("Llave", True, (200, 200, 200))
+    screen.blit(leyenda_llave, (520 + level_key.get_width() + 15, y_iconos + level_key.get_height()//2 - leyenda_llave.get_height()//2))
+
+    # Botón para volver al menú
+    draw_button("Volver al menu", 500, 500, 200, 60, (70, 130, 180), (100, 180, 250), regresar)
+
+    draw_button("Volver", 200, 500, 200, 60, (70, 130, 180), (100, 180, 250), lambda: cambiar_estado("pausa"))
+
+def informacion():
+    screen.fill((40, 25, 25))
+    font_titulo = pygame.font.Font(FONT_PATH, 50)
+    font_texto = pygame.font.Font(FONT_PATH, 30)
+
+    # Título
+    titulo = font_titulo.render("Informacion", True, (255, 255, 255))
+    screen.blit(titulo, (SCREEN_WIDTH//2 - titulo.get_width()//2, 40))
+
+    # Controles
+    info = [
+        "Creadores:",
+        "Brandon Alvarez y Bradly Morgan",
+        "Profes:",
+        "Jeff Schmidt Peralta y Diego Mora Rojas"
+    ]
+    
+    for i, texto in enumerate(info):
+        t = font_texto.render(texto, True, (200, 200, 200))
+        screen.blit(t, (80, 120 + i*40))
+
+    # Objetivo
+    objetivo = font_texto.render("Carrera: IC,  Asignatura: Introduccion a la programacion,  Ano: 2025 ", True, (255, 230, 100))
+    screen.blit(objetivo, (80, 450))
+
+    # Cargar y mostrar las fotos debajo de los profesores
+    foto1 = pygame.image.load("assets/perfil/brad.png").convert_alpha()
+    foto2 = pygame.image.load("assets/perfil/brandon.jpg").convert_alpha()
+    foto1 = pygame.transform.scale(foto1, (120, 120))
+    foto2 = pygame.transform.scale(foto2, (120, 120))
+    # Calcula la posición Y justo debajo de la última línea de texto (profesores)
+    y_fotos = 120 + len(info)*40 + 20  # 20 píxeles de espacio extra
+    screen.blit(foto1, (80, y_fotos))
+    screen.blit(foto2, (220, y_fotos))
+
+escape_pressed = False # Boton de pausa
+
 # Variables del juego
-level = 1  # Establecer el nivel a cargar
+level = 0  # Establecer el nivel a cargar
 screen_scroll = [0, 0]  # Inicializar la posición de desplazamiento de la pantalla
 interactables = None  # Inicializar la lista de objetos interactivos
 
@@ -182,7 +337,7 @@ def selecionar_skin(armas, clase):
 
 def display_info():
 
-    for i in range(HEARTHS_PJ + player.extra_hearts):
+    for i in range(5):
         if (i + 1) * 20 <= player.health:
             screen.blit(full_hearth, (10 + i * (ITEM_SIZE + 5), 10))
         elif (i + 1) * 20 <= player.health + 10:
@@ -192,7 +347,7 @@ def display_info():
 
     for i in range(11):
         if (i * 10) <= player.mana < ((i * 10) + 10):
-            screen.blit(mana[10-i], (SCREEN_WIDTH - (ITEM_SIZE * 4), -15))
+            screen.blit(mana[10-i], (10*30, -15))
             continue
     
     if not player.key:
@@ -267,8 +422,6 @@ def explosion(epi):
         for explosion in explosiones:
             if explosion[1].colliderect(player.collide_rect):
                 player.health -= 50
-                player_hurt_sound.play()
-
                 break
 
         explosiones = [Explosion(explosion_images, tile[1].center) for tile in explosiones]
@@ -276,14 +429,13 @@ def explosion(epi):
         # Daño a enemigos por explosión
         for explosion_obj in explosiones:
             for enemy in world.enemies:
-                if explosion_obj.rect.colliderect(enemy.collide_rect):
+                if explosion_obj.rect.colliderect(enemy.rect):
                     enemy_hit_sound.play()
-                    enemy.take_damage(200 + player.strenght) 
+                    enemy.take_damage(200)
         return explosiones
 
 def next_level():
-    global level, world, ESTADO, player, personaje_activo, interactables_group, pociones
-    pociones = []
+    global level, world, ESTADO, player, personaje_activo, interactables_group
     level += 1
     
     if level > 4:  
@@ -331,18 +483,6 @@ def manage_inventory(index):
     
     elif pocion == 20:
         player.speed_boost += 3
-        player.last_speed_boost = pygame.time.get_ticks()
-
-    elif pocion == 25:
-        player.health += 40
-        player.extra_hearts += 1
-
-        if player.health > (100 + (player.extra_hearts * 20)):
-            player.health = 100 + (player.extra_hearts * 20)
-
-    elif pocion == 26:
-        player.strenght += 50
-
 
 # Cargar tiles del mapa
 tile_list = []
@@ -374,8 +514,6 @@ for i in range(11):
     img = pygame.image.load(f"assets/images/items/mana/{i}.png").convert_alpha()
     img = scale_image_by_height(img, 100)
     mana.append(img)
-
-
 
 # Cargar imágenes de armas
 red_fireball = scale_image_by_height(pygame.image.load("assets/images/weapons/fireball.png").convert_alpha(), TROWABLE_SIZE)
@@ -426,6 +564,11 @@ for i in range(5):  # Skeleton
     img = scale_image_by_height(img, SKELETON_HEIGHT)
     skeleton_idle_images.append(img)
 
+boss_idle_images = []
+for i in range(4):  # Boss
+    img = pygame.image.load(f"assets/images/enemies/boss/idle_mov/{i}.png").convert_alpha()
+    img = scale_image_by_height(img, BOSS_HEIGHT)
+    boss_idle_images.append(img)
 
 
 ENEMY_TYPES = {
@@ -437,7 +580,9 @@ ENEMY_TYPES = {
 
     23: (Goblin, goblin_idle_images),
 
-    24: (Skeleton, skeleton_idle_images)
+    24: (Skeleton, skeleton_idle_images),
+
+    25: (Boss, boss_idle_images)
 }
 
 world.enemies = [enemy for enemy in world.enemies if enemy.health > 0]
@@ -448,7 +593,6 @@ explosions = None
 pociones = []
 NUMBER_KEYS = (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9)
 while run:
-    
 
     # Controlar la tasa de fotogramas
     clock.tick(FPS)
@@ -459,19 +603,43 @@ while run:
             run = False
 
         if ESTADO == "juego":
-            # Manejar teclas presionadas
             if event.type == pygame.KEYDOWN:
+                    if event.key in [pygame.K_a, pygame.K_LEFT]:
+                        moving_left = True
+                    if event.key in [pygame.K_d, pygame.K_RIGHT]:
+                        moving_right = True
+                    if event.key in [pygame.K_w, pygame.K_UP]:
+                        moving_up = True
+                    if event.key in [pygame.K_s, pygame.K_DOWN]:
+                        moving_down = True
+                    if event.key in NUMBER_KEYS:
+                        index = NUMBER_KEYS.index(event.key)
+                        manage_inventory(index)
+                    if event.key == pygame.K_ESCAPE and not escape_pressed:
+                        ESTADO = "pausa"
+                        escape_pressed = True
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_ESCAPE:
+                    escape_pressed = False
                 if event.key in [pygame.K_a, pygame.K_LEFT]:
-                    moving_left = True
-                if event.key and event.key in [pygame.K_d, pygame.K_RIGHT]:
-                    moving_right = True
+                    moving_left = False
+                if event.key in [pygame.K_d, pygame.K_RIGHT]:
+                    moving_right = False
                 if event.key in [pygame.K_w, pygame.K_UP]:
-                    moving_up = True
+                    moving_up = False
                 if event.key in [pygame.K_s, pygame.K_DOWN]:
-                    moving_down = True
-                if event.key in NUMBER_KEYS:
-                    index = NUMBER_KEYS.index(event.key)
-                    manage_inventory(index)
+                    moving_down = False
+
+            elif ESTADO == "pausa":
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE and not escape_pressed:
+                        ESTADO = "juego"
+                        escape_pressed = True
+
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_ESCAPE:
+                escape_pressed = False
                 
     
             # Manejar teclas soltadas
@@ -519,26 +687,30 @@ while run:
         
         world.enemies = [enemy for enemy in world.enemies if enemy.health > 0]
 
-        object_fired = personaje_activo.update(player)
+        if bloquear_disparo:
+            if not pygame.mouse.get_pressed()[0]:
+                bloquear_disparo = False
+        else:
+            object_fired = personaje_activo.update(player)
 
-        if object_fired:
-            trown_group.add(object_fired)
-        for object in trown_group:
-            bomb = object.update(screen_scroll)
-            if bomb:
-                explosions = explosion(bomb)
-                object.kill() 
-            else:
-                explosions = None
+            if object_fired:
+                trown_group.add(object_fired)
+            for object in trown_group:
+                bomb = object.update(screen_scroll)
+                if bomb:
+                    explosions = explosion(bomb)
+                    object.kill() 
+                else:
+                    explosions = None
 
-            if not isinstance(object, FireBomb):
-                for enemy in world.enemies:
-                    if object.rect.colliderect(enemy.collide_rect):
-                        enemy_hit_sound.play()
-                        enemy.take_damage(object.damage + player.strenght)
-                        object.kill()
+                    if not isinstance(object, FireBomb):
+                        for enemy in world.enemies:
+                            if object.rect.colliderect(enemy.rect):
+                                enemy_hit_sound.play()
+                                enemy.take_damage(object.damage)
+                                object.kill()
 
-            object.draw(screen)
+                object.draw(screen)
         
         
         if explosions:
@@ -567,12 +739,14 @@ while run:
                         enemy.rect.center = enemy.collide_rect.center
             enemy.draw(screen, screen_scroll)
         
-            if enemy.collide_rect.colliderect(player.collide_rect):
+            if enemy.rect.colliderect(player.rect):
                 if pygame.time.get_ticks() - player.last_hit > 2000:
                     player.health -= enemy.damage
-                    player_hurt_sound.play()
                     player.last_hit = pygame.time.get_ticks()
                     break
+
+            if player.health <= 0:
+                ESTADO = "game_over"
 
 
         for interactable in interactables_group:
@@ -586,7 +760,8 @@ while run:
 
         exit_rect = Rect(0, 0, 5, 5)
         exit_rect.center = world.exit_tile[1].center
-    
+        pygame.draw.rect(screen, (255, 0, 0), exit_rect, 1)
+        pygame.draw.rect(screen, (0, 255, 0), world.exit_tile[1], 1)
 
         if exit_rect.colliderect(player.collide_rect) and world.exit_open:
             next_level()
@@ -602,16 +777,19 @@ while run:
         screen.blit(title, (SCREEN_WIDTH//2 - title.get_width()//2, 100))
 
         # Botón Jugar
-        draw_button("Jugar", 300, 250, 200, 60, (70, 130, 180), (100, 180, 250), ventana_jugar)
+        draw_button("Jugar", 300, 200, 200, 60, (70, 130, 180), (100, 180, 250), ventana_jugar)
 
-        # Botón Créditos
-        draw_button("Salir", 300, 350, 200, 60, (70, 130, 180), (100, 180, 250), ventana_salir)
+        draw_button("configuracion", 300, 300, 200, 60, (70, 130, 180), (100, 180, 250), ventana_configuracion)
+
+        draw_button("Informacion", 300, 400, 200, 60, (70, 130, 180), (100, 180, 250), lambda: cambiar_estado("info"))
+
+        draw_button("Salir", 300, 500, 200, 60, (70, 130, 180), (100, 180, 250), ventana_salir)
 
         # Dibuja el menú y botones
     elif ESTADO == "seleccion_PJ":
     
         # Dibuja la selección de personaje
-        screen.fill(BLACK)
+        screen.fill((40, 25, 25))
         font = pygame.font.Font(FONT_PATH, 50)
         texto = font.render("Selecciona tu personaje", True, (255, 255, 255))
         screen.blit(texto, (SCREEN_WIDTH//2 - texto.get_width()//2, 50))
@@ -628,6 +806,46 @@ while run:
 
         draw_button("Guerrero", 500, 350, 150, 45, (70, 130, 180), (100, 180, 250), seleccionar_guerrero)
     
+    elif ESTADO == "configuracion":
+        screen.fill((40, 25, 25))
+        font = pygame.font.Font(FONT_PATH, 40)
+        texto = font.render("Volumen de la musica", True, (255, 255, 255))
+        screen.blit(texto, (SCREEN_WIDTH//2 - texto.get_width()//2, 100))
+        draw_volume_slider(200, 200, 400, 20, mixer.music.get_volume())
+        for event in pygame.event.get():
+            new_vol = handle_volume_slider(200, 200, 400, 20, event)
+            if new_vol is not None:
+                pass
+
+        draw_button("regresar al menu", 300, 350, 200, 60, (70, 130, 180), (100, 180, 250), regresar)
+
+    elif ESTADO == "pausa":
+        screen.fill((40, 25, 25))
+        font = pygame.font.Font(FONT_PATH, 60)
+        texto = font.render("PAUSA", True, (255, 255, 255))
+        screen.blit(texto, (SCREEN_WIDTH//2 - texto.get_width()//2, 150))
+
+        draw_button("Reanudar", 300, 300, 200, 60, (70, 130, 180), (100, 180, 250), lambda: cambiar_estado("juego"))
+
+        draw_button("Menu principal", 300, 400, 200, 60, (70, 130, 180), (100, 180, 250), lambda: cambiar_estado("menu"))
+
+        draw_button("ayuda y controles", 300, 500, 200, 60, (70, 130, 180), (100, 180, 250), lambda: cambiar_estado("ayuda"))
+
+    elif ESTADO == "ayuda":
+        mostrar_info()
+
+    elif ESTADO == "info":
+        informacion()
+
+    elif ESTADO == "game_over":
+        screen.fill((40, 25, 25))
+        font = pygame.font.Font(FONT_PATH, 80)
+        texto = font.render("GAME OVER", True, (255, 50, 50))
+        screen.blit(texto, (SCREEN_WIDTH//2 - texto.get_width()//2, 200))
+        font2 = pygame.font.Font(FONT_PATH, 40)
+        texto2 = font2.render("Pulsa para volver al menu", True, (255, 255, 255))
+        screen.blit(texto2, (SCREEN_WIDTH//2 - texto2.get_width()//2, 350))
+        draw_button("Menu principal", 300, 450, 200, 60, (70, 130, 180), (100, 180, 250), lambda: cambiar_estado("menu"))
 
     # Actualizar pantalla
     pygame.display.update()
