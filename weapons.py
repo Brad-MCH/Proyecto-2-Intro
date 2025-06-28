@@ -85,13 +85,17 @@ class RedMage:
         return object_fired
     
 class Archer:
-    def __init__(self, weapons, obstacles):
+    def __init__(self, weapons, tile_categories, explosion_imgs):
+        self.explosion_imgs = explosion_imgs
         self.arrow_image = weapons[0]
         self.firebomb_image = weapons[1]
         self.angle = 0
         self.fired = False
         self.last_shot = time.get_ticks()
-        self.obstacles = obstacles
+        self.obstacles = tile_categories["obstacles"]
+        self.map_tiles = tile_categories["map_tiles"]
+        self.destroyable_blocks = tile_categories["destroyable_blocks"]
+        self.walls = tile_categories["walls"]
         self.explosion_range = 1
 
     def update(self, player):
@@ -121,13 +125,17 @@ class Archer:
         return object_fired
 
 class Warrior:
-    def __init__(self, weapons, obstacles):
+    def __init__(self, weapons, tile_categories, explosion_imgs):
+        self.explosion_imgs = explosion_imgs
         self.dagger_image = weapons[0]
         self.firebomb_image = weapons[1]
         self.angle = 0
         self.fired = False
         self.last_shot = time.get_ticks()
-        self.obstacles = obstacles
+        self.obstacles = tile_categories["obstacles"]
+        self.map_tiles = tile_categories["map_tiles"]
+        self.destroyable_blocks = tile_categories["destroyable_blocks"]
+        self.walls = tile_categories["walls"]
         self.explosion_range = 1
 
     def update(self, player):

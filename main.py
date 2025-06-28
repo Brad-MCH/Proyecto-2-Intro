@@ -238,22 +238,13 @@ def scale_image_by_height(image, height):
     new_width = int(height * aspect_ratio)
     return pygame.transform.scale(image, (new_width, height))
 
-def load_animation_images(info_list):
-    animation_list = []
-    folder_name, number_frames = info_list
-    for i in range(number_frames):
-        img = pygame.image.load(f"assets/images/{folder_name}/{i}.png").convert_alpha()
-        img = scale_image_by_height(img, PLAYER_HEIGHT)
-        animation_list.append(img)
-
 mage_animations = []      
 archer_animations = []    
 warrior_animations = []
 
-animation_list = []
 animation_types = [
     "idle",
-    "running_up",
+    "running_up", 
     "running_down",
     "running_left",
     "running_right",
@@ -262,22 +253,26 @@ animation_types = [
     "running_down_left",
     "running_down_right"]
 
+# Cargar todas las animaciones en un solo bucle
 for animation_type in animation_types:
+    num_frames = 8 if animation_type == "idle" else 4
+    
     # Mago
     temp_animation_list = []
-    num_frames = 8 if animation_type == "idle" else 4
     for i in range(num_frames):
         img = pygame.image.load(f"assets/images/Mage-Red/{animation_type}/{i}.png").convert_alpha()
         img = scale_image_by_height(img, PLAYER_HEIGHT)
         temp_animation_list.append(img)
     mage_animations.append(temp_animation_list)
-     # Arquero
+    
+    # Arquero
     temp_animation_list = []
     for i in range(num_frames):
         img = pygame.image.load(f"assets/images/Archer/{animation_type}/{i}.png").convert_alpha()
         img = scale_image_by_height(img, PLAYER_HEIGHT)
         temp_animation_list.append(img)
     archer_animations.append(temp_animation_list)
+    
     # Guerrero
     temp_animation_list = []
     for i in range(num_frames):
@@ -286,7 +281,6 @@ for animation_type in animation_types:
         temp_animation_list.append(img)
     warrior_animations.append(temp_animation_list)
 
-# cargar imagenes de explosion
 explosion_images = []
 for i in range(6):
     img = pygame.image.load(f"assets/images/explosion/{i}.png").convert_alpha()
@@ -305,34 +299,12 @@ faded_key = scale_image_by_height(faded_key, ITEM_SIZE)
 level_key = pygame.image.load("assets/images/items/key.png").convert_alpha()
 level_key = scale_image_by_height(level_key, ITEM_SIZE)
 
-# Animaciones de las clases
-def seleccionar_mago():
+def seleccionar_personaje(animations, weapons, clase):
     global ESTADO, player, world, personaje_activo, interactables_group
-    interactables = world.load_map(world_data, tile_list, mage_animations, ENEMY_TYPES, spike_trap_images)
+    interactables = world.load_map(world_data, tile_list, animations, ENEMY_TYPES, spike_trap_images)
     interactables_group = pygame.sprite.Group(interactables)
     player = world.player
-    personaje_activo = RedMage(red_mage_weapons, world.tile_categories, explosion_images)
-    ESTADO = "juego"
-
-def seleccionar_arquero():
-    global ESTADO, player, world, personaje_activo
-    world.load_map(world_data, tile_list, archer_animations, ENEMY_TYPES)
-    player = world.player
-    personaje_activo = Archer(archer_weapons, world.obstacles)
-    ESTADO = "juego"
-
-def seleccionar_guerrero():
-    global ESTADO, player, world, personaje_activo
-    world.load_map(world_data, tile_list, warrior_animations, ENEMY_TYPES)
-    player = world.player
-    personaje_activo = Warrior(warrior_weapons, world.obstacles)
-    ESTADO = "juego"
-
-def selecionar_skin(armas, clase):
-    global ESTADO, player, world, personaje_activo
-    interactables = world.load_map(world_data, tile_list, mage_animations, ENEMY_TYPES, spike_trap_images)
-    player = world.player
-    personaje_activo = clase(armas, world.tile_categories, explosion_images)
+    personaje_activo = clase(weapons, world.tile_categories, explosion_images)
     ESTADO = "juego"
 
 def display_info():
@@ -361,7 +333,6 @@ def display_info():
     if pociones is not None:
         for i, pocion in enumerate(pociones):
             screen.blit(tile_list[pocion], (SCREEN_WIDTH - ITEM_SIZE - 10, 10 + (i + 1) * (ITEM_SIZE + 5)))
-
        
 def tile_here(center):
     pos_rect = Rect(center[0], center[1], 1, 1)
@@ -554,9 +525,7 @@ red_mage_weapons = [red_fireball, firebomb]
 archer_weapons = [arrow, firebomb]
 warrior_weapons = [dagger, firebomb]
 
-img_mago = mage_animations[0][0]
-img_arquero = archer_animations[0][0]
-img_guerrero = warrior_animations[0][0]
+
 
 trown_group = pygame.sprite.Group()
 explosions_group = pygame.sprite.Group()
@@ -612,6 +581,11 @@ ENEMY_TYPES = {
 
     27: (Boss, boss_idle_images)
 }
+
+# Crear las imágenes para mostrar en el menú de selección DESPUÉS de cargar las animaciones
+img_mago = mage_animations[0][0]
+img_arquero = archer_animations[0][0]
+img_guerrero = warrior_animations[0][0]
 
 world.enemies = [enemy for enemy in world.enemies if enemy.health > 0]
 
@@ -828,12 +802,12 @@ while run:
         screen.blit(img_arquero, (300 + 75 - img_arquero.get_width() // 2, 350 - img_arquero.get_height() - 40))
         
         screen.blit(img_guerrero, (500 + 75 - img_guerrero.get_width() // 2, 350 - img_guerrero.get_height() - 40))
+        
+        draw_button("Mago", 100, 350, 150, 45, (70, 130, 180), (100, 180, 250), lambda: seleccionar_personaje(mage_animations ,red_mage_weapons, RedMage))
 
-        draw_button("Mago", 100, 350, 150, 45, (70, 130, 180), (100, 180, 250), seleccionar_mago)
+        draw_button("Arquero", 300, 350, 150, 45, (70, 130, 180), (100, 180, 250), lambda: seleccionar_personaje(archer_animations, archer_weapons, Archer))
 
-        draw_button("Arquero", 300, 350, 150, 45, (70, 130, 180), (100, 180, 250), seleccionar_arquero)
-
-        draw_button("Guerrero", 500, 350, 150, 45, (70, 130, 180), (100, 180, 250), seleccionar_guerrero)
+        draw_button("Guerrero", 500, 350, 150, 45, (70, 130, 180), (100, 180, 250), lambda: seleccionar_personaje(warrior_animations, warrior_weapons, Warrior))
     
     elif ESTADO == "configuracion":
         screen.fill((40, 25, 25))

@@ -38,7 +38,7 @@ class Move_enemy:
             if distancia != 0:
                 dx /= distancia
                 dy /= distancia
-            velocidad = 2  # Puedes ajustar la velocidad
+            velocidad = 2  
             self.collide_rect.x += int(dx * velocidad)
             self.collide_rect.y += int(dy * velocidad)
             self.rect.center = (self.collide_rect.centerx, self.collide_rect.centery)

@@ -8,7 +8,7 @@ player_hurt_sound = mixer.Sound('assets/sound/player_hurt.mp3')
 mixer.Sound.set_volume(player_hurt_sound, 0.5)
 
 class Player:
-    def __init__(self, x, y, animation_list, health=HEALTH_PJ, mana=MANA_PJ):
+    def __init__(self, x, y, animation_list, health=HEALTH_PJ, mana=MANA_PJ, strong=STRONG_PJ):
         self.health = health
         self.mana = mana
         self.last_mov = 0
@@ -16,7 +16,8 @@ class Player:
         self.action = 0 # 0:idle, 1:corriendo_arriba, 2:corriendo_abajo, 3:corriendo_izquierda, 4:corriendo_derecha, 5:corriendo_arriba_izquierda, 6:corriendo_arriba_derecha, 7:corriendo_abajo_izquierda, 8:corriendo_abajo_derecha
         self.animation_list = animation_list
         self.update_time = pygame.time.get_ticks()
-        self.image = animation_list[self.action][self.frame_index]
+        print(self.animation_list[self.action])
+        self.image = self.animation_list[self.action][self.frame_index] 
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         
@@ -225,7 +226,7 @@ class Mage(Player):
 
     def update(self):
         super().update()
-        # Aquí puedes agregar lógica específica del mago si es necesario
+        
 
 class Archer(Player):
     def __init__(self, x, y, animation_list):
@@ -233,7 +234,7 @@ class Archer(Player):
 
     def update(self):
         super().update()
-        # Aquí puedes agregar lógica específica del arquero si es necesario
+     
 
 class Warrior(Player):
     def __init__(self, x, y, animation_list):
@@ -241,4 +242,4 @@ class Warrior(Player):
 
     def update(self):
         super().update()
-        # Aquí puedes agregar lógica específica del guerrero si es necesario
+   
