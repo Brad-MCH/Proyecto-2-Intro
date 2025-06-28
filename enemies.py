@@ -137,3 +137,10 @@ class Snail(Move_enemy):
         self.frame = 0
         self.health = SNAIL_HEALTH
         self.damage = SNAIL_DAMAGE
+
+class Boss(Move_enemy):
+    def __init__(self, x, y, animation_list_enemy):
+        super().__init__(x, y, animation_list_enemy)
+        self.frame = 0
+        self.health = BOSS_HEALTH
+        self.damage = BOSS_DAMAGE
