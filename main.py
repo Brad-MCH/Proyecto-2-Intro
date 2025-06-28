@@ -255,6 +255,11 @@ def explosion(epi):
 
         explosiones = [Explosion(explosion_images, tile[1].center) for tile in explosiones]
 
+        # Daño a enemigos por explosión
+        for explosion_obj in explosiones:
+            for enemy in world.enemies:
+                if explosion_obj.rect.colliderect(enemy.rect):
+                    enemy.take_damage(200)
         return explosiones
 
 def next_level():
@@ -362,12 +367,48 @@ explosions_group = pygame.sprite.Group()
 slime_idle_images = []
 for i in range(6):  # Slime
     img = pygame.image.load(f"assets/images/enemies/slime/idle_mov/{i}.png").convert_alpha()
-    img = scale_image_by_height(img, PLAYER_HEIGHT)  
+    img = scale_image_by_height(img, SLIME_HEIGHT)
     slime_idle_images.append(img)
 
+snail_idle_images = []
+for i in range(4):  # Snail
+    img = pygame.image.load(f"assets/images/enemies/snail/idle_mov/{i}.png").convert_alpha()
+    img = scale_image_by_height(img, SNAIL_HEIGHT)
+    snail_idle_images.append(img)
+
+goblin_idle_images = []
+for i in range(4):  # Goblin
+    img = pygame.image.load(f"assets/images/enemies/goblin/idle_mov/{i}.png").convert_alpha()
+    img = scale_image_by_height(img, GOBLIN_HEIGHT)
+    goblin_idle_images.append(img)
+
+demon_idle_images = []
+for i in range(6):  # Demon
+    img = pygame.image.load(f"assets/images/enemies/demon/idle_mov/{i}.png").convert_alpha()
+    img = scale_image_by_height(img, DEMON_HEIGHT)
+    demon_idle_images.append(img)
+
+skeleton_idle_images = []
+for i in range(5):  # Skeleton
+    img = pygame.image.load(f"assets/images/enemies/skeleton/idle_mov/{i}.png").convert_alpha()
+    img = scale_image_by_height(img, SKELETON_HEIGHT)
+    skeleton_idle_images.append(img)
+
+
+
 ENEMY_TYPES = {
-    11: (Slime, slime_idle_images),  # 11 es el tile del slime
+    11: (Slime, slime_idle_images), 
+    
+    21: (Snail, snail_idle_images),
+
+    22: (Demon, demon_idle_images),
+
+    23: (Goblin, goblin_idle_images),
+
+    24: (Skeleton, skeleton_idle_images)
 }
+
+world.enemies = [enemy for enemy in world.enemies if enemy.health > 0]
 
 # Bucle principal del juego 
 run = True
@@ -443,6 +484,7 @@ while run:
         for trap in world.traps:
             trap.update(screen_scroll, player)
         
+        world.enemies = [enemy for enemy in world.enemies if enemy.health > 0]
 
         object_fired = personaje_activo.update(player)
 
@@ -455,6 +497,12 @@ while run:
                 object.kill() 
             else:
                 explosions = None
+
+            if not isinstance(object, FireBomb):
+                for enemy in world.enemies:
+                    if object.rect.colliderect(enemy.rect):
+                        enemy.take_damage(object.damage)
+                        object.kill()
 
             object.draw(screen)
         
@@ -473,9 +521,23 @@ while run:
         display_info()
 
         # Dibuja a los enemigos
-        for enemy in world.enemies:
-            enemy.update(world.get_obstacle_rects(), screen_scroll)
+        for i, enemy in enumerate(world.enemies):
+            enemy.update(world.get_obstacle_rects(), screen_scroll, player, RANGO_VISION)
+            # Evita superposición con otros enemigos
+            for j, other in enumerate(world.enemies):
+                if i != j and enemy.rect.colliderect(other.rect):
+                    # Retrocede el movimiento o ajusta la posición
+                    if hasattr(enemy, "last_dx") and hasattr(enemy, "last_dy"):
+                        enemy.collide_rect.x -= int(enemy.last_dx)
+                        enemy.collide_rect.y -= int(enemy.last_dy)
+                        enemy.rect.center = enemy.collide_rect.center
             enemy.draw(screen, screen_scroll)
+        
+            if enemy.rect.colliderect(player.rect):
+                if pygame.time.get_ticks() - player.last_hit > 2000:
+                    player.health -= enemy.damage
+                    player.last_hit = pygame.time.get_ticks()
+                    break
 
 
         for interactable in interactables_group:

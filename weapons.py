@@ -170,6 +170,7 @@ class RedFireball(sprite.Sprite):
         self.collide_rect = Rect(0, 0, 30, 30)
         self.collide_rect.center = self.rect.center
         self.spawn_time = time.get_ticks()
+        self.damage = 30
         
 
         self.dx = math.cos(math.radians(self.angle)) * TROWN_SPEED
@@ -208,6 +209,7 @@ class FireBomb(sprite.Sprite):
         self.collide_rect = Rect(0, 0, 30, 30)
         self.collide_rect.center = self.rect.center
         self.spawn_time = time.get_ticks()
+        self.damage = 0
 
         self.dx = math.cos(math.radians(self.angle)) * TROWN_SPEED
         self.dy = -(math.sin(math.radians(self.angle)) * TROWN_SPEED)
@@ -273,6 +275,7 @@ class Arrow(sprite.Sprite):
         self.collide_rect = Rect(0, 0, 30, 30)
         self.collide_rect.center = self.rect.center
         self.spawn_time = time.get_ticks()
+        self.damage = 25
         
 
         self.dx = math.cos(math.radians(self.angle)) * TROWN_SPEED
@@ -308,6 +311,7 @@ class Dagger(sprite.Sprite):
         self.collide_rect = Rect(0, 0, 30, 30)
         self.collide_rect.center = self.rect.center
         self.spawn_time = time.get_ticks()
+        self.damage = 15
         
 
         self.dx = math.cos(math.radians(self.angle)) * TROWN_SPEED
