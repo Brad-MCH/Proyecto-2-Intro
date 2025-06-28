@@ -29,6 +29,7 @@ FONT_PATH = "assets/fonts/DUNGRG__.TTF"
 BLACK = (0, 0, 0)
 ESTADO = "menu"
 
+
 ITEM_SIZE = 50
 
 BOMB_MANA = 5

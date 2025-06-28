@@ -45,6 +45,57 @@ def handle_volume_slider(x, y, width, height, event):
 
 interactables_group = pygame.sprite.Group()
 
+score_guardado = False
+
+player_name = ""
+
+
+def pedir_nombre():
+    global player_name
+    font = pygame.font.Font(FONT_PATH, 40)
+    input_box = pygame.Rect(250, 300, 300, 50)
+    color_inactive = (150, 150, 150)
+    color_active = (200, 200, 255)
+    color = color_inactive
+    active = False
+    text = ""
+    done = False
+
+    while not done:
+        screen.fill((40, 25, 25))
+        mensaje = font.render("Ingresa tu nombre:", True, (255, 255, 255))
+        screen.blit(mensaje, (SCREEN_WIDTH // 2 - mensaje.get_width() // 2, 200))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if input_box.collidepoint(event.pos):
+                    active = True
+                else:
+                    active = False
+                color = color_active if active else color_inactive
+            elif event.type == pygame.KEYDOWN:
+                if active:
+                    if event.key == pygame.K_RETURN:
+                        player_name = text if text.strip() != "" else "Anonimo"
+                        done = True
+                    elif event.key == pygame.K_BACKSPACE:
+                        text = text[:-1]
+                    else:
+                        if len(text) < 12:
+                            text += event.unicode
+
+        txt_surface = font.render(text, True, (255, 255, 255))
+        width = max(300, txt_surface.get_width() + 10)
+        input_box.w = width
+        pygame.draw.rect(screen, color, input_box, 2)
+        screen.blit(txt_surface, (input_box.x + 5, input_box.y + 10))
+
+        pygame.display.flip()
+        clock.tick(30)
+
 # el jugador no se ha creado
 player = None
 seleccionando_personaje = False
@@ -125,10 +176,15 @@ def regresar():
     reiniciar_juego()
 
 def cambiar_estado(nuevo_estado):
-    global ESTADO, bloquear_disparo
+    global ESTADO, bloquear_disparo, score_guardado
     ESTADO = nuevo_estado
     if nuevo_estado == "menu":
         reiniciar_juego()
+        score_guardado = False
+    ESTADO = nuevo_estado
+    if nuevo_estado == "menu":
+        reiniciar_juego()
+        score_guardado = False
     if nuevo_estado == "juego":
         bloquear_disparo = True
         if player is not None:
@@ -217,6 +273,42 @@ def informacion():
     y_fotos = 120 + len(info)*40 + 20  # 20 píxeles de espacio extra
     screen.blit(foto1, (80, y_fotos))
     screen.blit(foto2, (220, y_fotos))
+
+def guardar_score():
+    global player_name, score
+    if not player_name:
+        player_name = "Anonimo"
+    with open("scores.txt", "a", encoding="utf-8") as file:
+        file.write(f"{player_name},{score}\n")
+
+def mostrar_leaderboard(offset_y=50):
+    try:
+        with open("scores.txt", "r", encoding="utf-8") as file:
+            lineas = file.readlines()
+    except FileNotFoundError:
+        lineas = []
+
+    puntajes = []
+    for linea in lineas:
+        try:
+            nombre, puntaje = linea.strip().split(",")
+            puntajes.append((nombre, int(puntaje)))
+        except:
+            continue
+
+    puntajes.sort(key=lambda x: x[1], reverse=True)
+    top5 = puntajes[:5]
+
+    font_titulo = pygame.font.Font(FONT_PATH, 50)
+    font = pygame.font.Font(FONT_PATH, 30)
+    titulo = font_titulo.render("Leaderboard", True, (255, 255, 255))
+    screen.blit(titulo, (SCREEN_WIDTH // 2 - titulo.get_width() // 2, offset_y))
+
+    for i, (nombre, puntos) in enumerate(top5):
+        texto = font.render(f"{i+1}. {nombre} - {puntos}", True, (255, 255, 255))
+        screen.blit(texto, (SCREEN_WIDTH // 2 - texto.get_width() // 2, offset_y + 60 + i * 35))
+
+
 
 escape_pressed = False # Boton de pausa
 
@@ -307,6 +399,7 @@ level_key = scale_image_by_height(level_key, ITEM_SIZE)
 
 # Animaciones de las clases
 def seleccionar_mago():
+    pedir_nombre()
     global ESTADO, player, world, personaje_activo, interactables_group
     interactables = world.load_map(world_data, tile_list, mage_animations, ENEMY_TYPES, spike_trap_images)
     interactables_group = pygame.sprite.Group(interactables)
@@ -315,6 +408,7 @@ def seleccionar_mago():
     ESTADO = "juego"
 
 def seleccionar_arquero():
+    pedir_nombre()
     global ESTADO, player, world, personaje_activo
     world.load_map(world_data, tile_list, archer_animations, ENEMY_TYPES)
     player = world.player
@@ -322,6 +416,7 @@ def seleccionar_arquero():
     ESTADO = "juego"
 
 def seleccionar_guerrero():
+    pedir_nombre()
     global ESTADO, player, world, personaje_activo
     world.load_map(world_data, tile_list, warrior_animations, ENEMY_TYPES)
     player = world.player
@@ -452,9 +547,11 @@ def next_level():
     pociones = []
     level += 1
     
-    if level > 4:  
-        pygame.quit()
-        exit()
+    if level > 4:
+        global ESTADO
+        ESTADO = "gane"
+        """pygame.quit()
+        exit()"""
     else:
 
         world_data = [[-1 for _ in range(WORLD_COLS)] for _ in range(WORLD_ROWS)]
@@ -867,14 +964,52 @@ while run:
         informacion()
 
     elif ESTADO == "game_over":
+
+        if not score_guardado:
+            guardar_score()
+            score_guardado = True
         screen.fill((40, 25, 25))
-        font = pygame.font.Font(FONT_PATH, 80)
-        texto = font.render("GAME OVER", True, (255, 50, 50))
-        screen.blit(texto, (SCREEN_WIDTH//2 - texto.get_width()//2, 200))
-        font2 = pygame.font.Font(FONT_PATH, 40)
-        texto2 = font2.render("Pulsa para volver al menu", True, (255, 255, 255))
-        screen.blit(texto2, (SCREEN_WIDTH//2 - texto2.get_width()//2, 350))
+
+        # Título GAME OVER
+        font_gigante = pygame.font.Font(FONT_PATH, 80)
+        texto = font_gigante.render("GAME OVER", True, (255, 50, 50))
+        screen.blit(texto, (SCREEN_WIDTH // 2 - texto.get_width() // 2, 40))
+
+        # Leaderboard
+        mostrar_leaderboard(offset_y=150)
+
+        # Texto inferior
+        font_medio = pygame.font.Font(FONT_PATH, 30)
+        texto2 = font_medio.render("Pulsa para volver al menu", True, (255, 255, 255))
+        screen.blit(texto2, (SCREEN_WIDTH // 2 - texto2.get_width() // 2, 400))
+
+        # Botón para volver
         draw_button("Menu principal", 300, 450, 200, 60, (70, 130, 180), (100, 180, 250), lambda: cambiar_estado("menu"))
+
+    elif ESTADO == "gane":
+
+        if not score_guardado:
+            guardar_score()
+            score_guardado = True
+
+        screen.fill((40, 25, 25))
+
+        # Título de victoria
+        font_gigante = pygame.font.Font(FONT_PATH, 60)
+        texto = font_gigante.render("¡FELICIDADES, GANASTE EL JUEGO!", True, (255, 255, 255))
+        screen.blit(texto, (SCREEN_WIDTH // 2 - texto.get_width() // 2, 40))
+
+        # Leaderboard
+        mostrar_leaderboard(offset_y=150)
+
+        # Texto de instrucciones
+        font_medio = pygame.font.Font(FONT_PATH, 30)
+        texto2 = font_medio.render("Pulsa para volver al menu", True, (255, 255, 255))
+        screen.blit(texto2, (SCREEN_WIDTH // 2 - texto2.get_width() // 2, 400))
+
+        # Botón para regresar
+        draw_button("Menu principal", 300, 450, 200, 60,
+                    (70, 130, 180), (100, 180, 250), lambda: cambiar_estado("menu"))
 
     # Actualizar pantalla
     pygame.display.update()
