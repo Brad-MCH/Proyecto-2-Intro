@@ -3,6 +3,9 @@ from constants import *
 from enemies import *
 from pygame import *
 
+mixer.init()
+player_hurt_sound = mixer.Sound('assets/sound/player_hurt.mp3')
+mixer.Sound.set_volume(player_hurt_sound, 0.5)
 
 class World:
     def __init__(self):
@@ -69,7 +72,7 @@ class World:
                     self.enemies.append(enemy)
                     tile_data[0] = tile_list[0]
 
-                if tile in (14, 15, 19, 20): # Poción de maná o salud
+                if tile in (14, 15, 19, 20, 25, 26): # Pociónes y powers
                     potion = Potion(tile_list, (img_rect.x, img_rect.y), tile)
                     self.interactables.append(potion)
                     tile_data[0] = tile_list[0]
@@ -124,17 +127,21 @@ class World:
                 self.exit_tile[0] = tile_list[8]
 
         for pit in self.lava_ice_tiles:
-            if pit[1].colliderect(player.collide_rect):
+            collide_pit_rect = Rect(0, 0, 15, 15)
+            collide_pit_rect.center = pit[1].center
+            if collide_pit_rect.colliderect(player.collide_rect):
                 if pygame.time.get_ticks() - self.last_hit > 500:
                     player.health -= 10
+                    player_hurt_sound.play()
                     self.last_hit = pygame.time.get_ticks()
+             
                     
             
 
     def draw(self, screen):
         for tile in self.map_tiles:
             screen.blit(tile[0], tile[1])
-        pygame.draw.rect(screen, RED, self.open_rect, 1)
+    
     
     def get_obstacle_rects(self): # Para los enemigos
         return [tile[1] for tile in self.obstacles]
@@ -174,6 +181,7 @@ class Spike_trap:
         if self.pierce:
             if self.rect.colliderect(player.collide_rect) and now - self.last_hit > 1000:  
                 player.health -= 20
+                player_hurt_sound.play()
                 self.last_hit = now
                 
 
@@ -204,7 +212,6 @@ class Potion(sprite.Sprite):
         if self.done:
             self.kill()
         surface.blit(self.image, self.rect.topleft)
-        pygame.draw.rect(surface, RED, self.rect, 1)  # Dibujar
 
 class Key(sprite.Sprite):
     def __init__(self, tile_list, center):
@@ -228,5 +235,4 @@ class Key(sprite.Sprite):
 
     def draw(self, surface):
         surface.blit(self.image, self.rect.topleft)
-        pygame.draw.rect(surface, RED, self.rect, 1)
 

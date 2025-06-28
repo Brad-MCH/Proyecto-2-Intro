@@ -1,12 +1,16 @@
 import pygame
 import math
 from constants import *
+from pygame import mixer
+
+mixer.init()
+player_hurt_sound = mixer.Sound('assets/sound/player_hurt.mp3')
+mixer.Sound.set_volume(player_hurt_sound, 0.5)
 
 class Player:
-    def __init__(self, x, y, animation_list, health=HEALTH_PJ, mana=MANA_PJ, strong=STRONG_PJ):
+    def __init__(self, x, y, animation_list, health=HEALTH_PJ, mana=MANA_PJ):
         self.health = health
         self.mana = mana
-        self.strong = strong
         self.last_mov = 0
         self.frame_index = 0
         self.action = 0 # 0:idle, 1:corriendo_arriba, 2:corriendo_abajo, 3:corriendo_izquierda, 4:corriendo_derecha, 5:corriendo_arriba_izquierda, 6:corriendo_arriba_derecha, 7:corriendo_abajo_izquierda, 8:corriendo_abajo_derecha
@@ -21,6 +25,16 @@ class Player:
         self.key = None
         self.last_hit = 0
         self.speed_boost = 0
+        self.last_speed_boost = 0
+        self.extra_hearts = 0
+        self.strenght = 0
+          
+    def take_damage(self, amount):
+        self.health -= amount
+        player_hurt_sound.play()
+        if self.health <= 0:
+            self.health = 0
+        
 
     def move(self, dx, dy, obstacles):
 
@@ -102,6 +116,12 @@ class Player:
         return screen_scroll
 
     def update(self):
+
+        now = pygame.time.get_ticks()
+        if now - self.last_speed_boost > 60000:
+            self.speed_boost = 0
+
+
         if self.action == 0:
             self.update_idle()
         elif self.action == 1:

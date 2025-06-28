@@ -23,6 +23,9 @@ mixer.Sound.set_volume(explosion_sound, 0.5)
 enemy_hit_sound = mixer.Sound("assets/sound/enemy_hurt.mp3")
 mixer.Sound.set_volume(enemy_hit_sound, 0.5)
 
+player_hurt_sound = mixer.Sound("assets/sound/player_hurt.mp3")
+mixer.Sound.set_volume(player_hurt_sound, 0.5)
+
 interactables_group = pygame.sprite.Group()
 # el jugador no se ha creado
 player = None
@@ -179,7 +182,7 @@ def selecionar_skin(armas, clase):
 
 def display_info():
 
-    for i in range(5):
+    for i in range(HEARTHS_PJ + player.extra_hearts):
         if (i + 1) * 20 <= player.health:
             screen.blit(full_hearth, (10 + i * (ITEM_SIZE + 5), 10))
         elif (i + 1) * 20 <= player.health + 10:
@@ -189,7 +192,7 @@ def display_info():
 
     for i in range(11):
         if (i * 10) <= player.mana < ((i * 10) + 10):
-            screen.blit(mana[10-i], (10*30, -15))
+            screen.blit(mana[10-i], (SCREEN_WIDTH - (ITEM_SIZE * 4), -15))
             continue
     
     if not player.key:
@@ -264,6 +267,8 @@ def explosion(epi):
         for explosion in explosiones:
             if explosion[1].colliderect(player.collide_rect):
                 player.health -= 50
+                player_hurt_sound.play()
+
                 break
 
         explosiones = [Explosion(explosion_images, tile[1].center) for tile in explosiones]
@@ -271,9 +276,9 @@ def explosion(epi):
         # Daño a enemigos por explosión
         for explosion_obj in explosiones:
             for enemy in world.enemies:
-                if explosion_obj.rect.colliderect(enemy.rect):
+                if explosion_obj.rect.colliderect(enemy.collide_rect):
                     enemy_hit_sound.play()
-                    enemy.take_damage(200)
+                    enemy.take_damage(200 + player.strenght) 
         return explosiones
 
 def next_level():
@@ -325,6 +330,18 @@ def manage_inventory(index):
     
     elif pocion == 20:
         player.speed_boost += 3
+        player.last_speed_boost = pygame.time.get_ticks()
+
+    elif pocion == 25:
+        player.health += 40
+        player.extra_hearts += 1
+
+        if player.health > (100 + (player.extra_hearts * 20)):
+            player.health = 100 + (player.extra_hearts * 20)
+
+    elif pocion == 26:
+        player.strenght += 50
+
 
 # Cargar tiles del mapa
 tile_list = []
@@ -430,6 +447,7 @@ explosions = None
 pociones = []
 NUMBER_KEYS = (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9)
 while run:
+    
 
     # Controlar la tasa de fotogramas
     clock.tick(FPS)
@@ -514,9 +532,9 @@ while run:
 
             if not isinstance(object, FireBomb):
                 for enemy in world.enemies:
-                    if object.rect.colliderect(enemy.rect):
+                    if object.rect.colliderect(enemy.collide_rect):
                         enemy_hit_sound.play()
-                        enemy.take_damage(object.damage)
+                        enemy.take_damage(object.damage + player.strenght)
                         object.kill()
 
             object.draw(screen)
@@ -548,9 +566,10 @@ while run:
                         enemy.rect.center = enemy.collide_rect.center
             enemy.draw(screen, screen_scroll)
         
-            if enemy.rect.colliderect(player.rect):
+            if enemy.collide_rect.colliderect(player.collide_rect):
                 if pygame.time.get_ticks() - player.last_hit > 2000:
                     player.health -= enemy.damage
+                    player_hurt_sound.play()
                     player.last_hit = pygame.time.get_ticks()
                     break
 
@@ -566,8 +585,7 @@ while run:
 
         exit_rect = Rect(0, 0, 5, 5)
         exit_rect.center = world.exit_tile[1].center
-        pygame.draw.rect(screen, (255, 0, 0), exit_rect, 1)
-        pygame.draw.rect(screen, (0, 255, 0), world.exit_tile[1], 1)
+    
 
         if exit_rect.colliderect(player.collide_rect) and world.exit_open:
             next_level()
