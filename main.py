@@ -6,10 +6,22 @@ import csv
 from os import system
 from weapons import *
 from enemies import *
+from pygame import mixer
 
 system("cls")
 
 pygame.init()
+mixer.init()
+
+mixer.music.load("assets/sound/music.ogg")
+mixer.music.set_volume(0.5)
+mixer.music.play(-1)
+
+explosion_sound = mixer.Sound("assets/sound/bomb.mp3")
+mixer.Sound.set_volume(explosion_sound, 0.5)
+
+enemy_hit_sound = mixer.Sound("assets/sound/enemy_hurt.mp3")
+mixer.Sound.set_volume(enemy_hit_sound, 0.5)
 
 interactables_group = pygame.sprite.Group()
 # el jugador no se ha creado
@@ -198,7 +210,8 @@ def tile_here(center):
     return None
 
 def explosion(epi):
-    
+
+        explosion_sound.play()
         epicenter = tile_here(epi)
         
         if not epicenter:
@@ -259,6 +272,7 @@ def explosion(epi):
         for explosion_obj in explosiones:
             for enemy in world.enemies:
                 if explosion_obj.rect.colliderect(enemy.rect):
+                    enemy_hit_sound.play()
                     enemy.take_damage(200)
         return explosiones
 
@@ -501,6 +515,7 @@ while run:
             if not isinstance(object, FireBomb):
                 for enemy in world.enemies:
                     if object.rect.colliderect(enemy.rect):
+                        enemy_hit_sound.play()
                         enemy.take_damage(object.damage)
                         object.kill()
 
