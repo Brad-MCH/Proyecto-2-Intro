@@ -104,6 +104,7 @@ class World:
                 if tile in self.destroyable_blocks:
                     self.obstacles.remove(tile)
                     self.destroyable_blocks.remove(tile)
+                    tile[4] = False
                     tile[0] = tile_list[0]
                 
                 if tile == self.key_tile:

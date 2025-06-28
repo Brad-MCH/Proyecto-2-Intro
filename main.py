@@ -69,7 +69,7 @@ def ventana_salir():
 level = 1  # Establecer el nivel a cargar
 screen_scroll = [0, 0]  # Inicializar la posición de desplazamiento de la pantalla
 interactables = None  # Inicializar la lista de objetos interactivos
-
+score = 0
 # Definir variables de movimiento del jugador
 moving_left = False
 moving_right = False
@@ -194,6 +194,9 @@ def display_info():
         if (i * 10) <= player.mana < ((i * 10) + 10):
             screen.blit(mana[10-i], (SCREEN_WIDTH - (ITEM_SIZE * 4), -15))
             continue
+
+    score_label = pygame.font.Font(FONT_PATH, 40).render(f"Score: {score}", True, (255, 255, 255))
+    screen.blit(score_label, (SCREEN_WIDTH - score_label.get_width() - 275, 10))
     
     if not player.key:
         screen.blit(faded_key, (SCREEN_WIDTH - ITEM_SIZE - 10, 10))
@@ -213,6 +216,7 @@ def tile_here(center):
     return None
 
 def explosion(epi):
+        global score
 
         explosion_sound.play()
         epicenter = tile_here(epi)
@@ -258,7 +262,11 @@ def explosion(epi):
             
         
         explosiones = [tile for tile in explosiones if tile is not None]
-        
+
+        for explosion in explosiones:
+            if explosion[4]:
+                score += 10
+                
         for tile in explosiones:
             world.explotar(tile, tile_list)
 
@@ -270,6 +278,8 @@ def explosion(epi):
                 player_hurt_sound.play()
 
                 break
+        
+        
 
         explosiones = [Explosion(explosion_images, tile[1].center) for tile in explosiones]
 
@@ -278,6 +288,7 @@ def explosion(epi):
             for enemy in world.enemies:
                 if explosion_obj.rect.colliderect(enemy.collide_rect):
                     enemy_hit_sound.play()
+                    score += 50
                     enemy.take_damage(200 + player.strenght) 
         return explosiones
 
@@ -535,6 +546,7 @@ while run:
                 for enemy in world.enemies:
                     if object.rect.colliderect(enemy.collide_rect):
                         enemy_hit_sound.play()
+                        score += 50
                         enemy.take_damage(object.damage + player.strenght)
                         object.kill()
 
