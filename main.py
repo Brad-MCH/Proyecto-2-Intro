@@ -610,7 +610,7 @@ ENEMY_TYPES = {
 
     24: (Skeleton, skeleton_idle_images),
 
-    25: (Boss, boss_idle_images)
+    27: (Boss, boss_idle_images)
 }
 
 world.enemies = [enemy for enemy in world.enemies if enemy.health > 0]
@@ -731,13 +731,13 @@ while run:
                 else:
                     explosions = None
 
-            if not isinstance(object, FireBomb):
-                for enemy in world.enemies:
-                    if object.rect.colliderect(enemy.collide_rect):
-                        enemy_hit_sound.play()
-                        score += 50
-                        enemy.take_damage(object.damage + player.strenght)
-                        object.kill()
+                if not isinstance(object, FireBomb):
+                    for enemy in world.enemies:
+                        if object.rect.colliderect(enemy.collide_rect):
+                            enemy_hit_sound.play()
+                            score += 50
+                            enemy.take_damage(object.damage + player.strenght)
+                            object.kill()
 
                 object.draw(screen)
         
